@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Toss Style UI with Motion Banner</title>
+   
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 변수 및 기본 설정 --- */
+        :root {
+            --bg-color: #F2F4F6;
+            --primary-blue: #3182F6;
+            --text-black: #191F28;
+            --text-gray: #8B95A1;
+            --card-white: #FFFFFF;
+            --card-radius: 24px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+font-size: 16px;
+    font-family: Noto, Roboto, -apple-system, helvetica, "Apple SD Gothic Neo", sans-serif;
+    font-weight: 400;
+    word-break: break-all;
+            background-color: var(--bg-color);
+            color: var(--text-black);
+            display: flex; justify-content: center;
+            min-height: 100vh; overflow-x: hidden;
+        }
+       
+        /* 모바일 컨테이너 */
+        .mobile-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--bg-color);
+            padding-bottom: 100px;
+            padding-top: 60px; /* 헤더 공간 */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            min-height: 100vh;
+        }
+
+        /* --- 1. Fixed Header --- */
+        header.fixed-header {
+            position: fixed; top: 0; width: 100%; max-width: 480px; height: 60px;
+            background: rgba(242, 244, 246, 0.95); backdrop-filter: blur(10px);
+            padding: 0 24px; display: flex; justify-content: space-between; align-items: center; z-index: 1000;
+        }
+        .header-icons { display: flex; gap: 20px; color: #B1B8C0; font-size: 22px; }
+
+        /* --- 2. Motion Banner (New) --- */
+        /* 초기 상태: 높이 0, 투명도 0 */
+        #promo-banner {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, #FFFFFF 0%, #EDF5FF 100%); /* 부드러운 블루 그라데이션 */
+            margin: 0 20px 0 20px; /* 좌우 여백 */
+            border-radius: 24px;
+            position: relative;
+            transition: max-height 1.0s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease-in, margin-bottom 1.5s;
+            box-shadow: 0 10px 30px rgba(49, 130, 246, 0.1);
+        }
+       
+        /* 활성화 클래스 (JS로 제어) */
+        #promo-banner.active {
+            max-height: 500px; /* 충분히 큰 값 설정 */
+            opacity: 1;
+            margin-bottom: 20px; /* 하단 컨텐츠 밀어내기 */
+ margin-top: 20px;
+        }
+
+        .promo-inner {
+            padding: 30px 24px 24px 24px;
+            position: relative;
+            text-align: left;
+        }
+
+        /* 닫기 버튼 */
+        .promo-close {
+            position: absolute; top: 20px; right: 20px;
+            font-size: 20px; color: #B0B8C1; cursor: pointer; z-index: 10;
+        }
+
+        /* 3D 코인 연출 */
+        .coin-deco {
+            position: absolute;
+            top: -20px; right: 20px;
+            width: 120px; height: 120px;
+            pointer-events: none;
+        }
+        .coin {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff 30%, #dae8fa 100%);
+            box-shadow: 2px 5px 15px rgba(49, 130, 246, 0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: #8B95A1;
+            animation: floatCoin 3s ease-in-out infinite;
+        }
+        .coin.large {
+            width: 60px; height: 60px; font-size: 24px;
+            right: 20px; top: 60px; z-index: 2;
+        }
+        .coin.small {
+            width: 40px; height: 40px; font-size: 16px;
+            right: 70px; top: 30px; opacity: 0.8; z-index: 1;
+            animation-delay: 1.5s; /* 엇박자 애니메이션 */
+        }
+        @keyframes floatCoin {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* 텍스트 & 버튼 */
+        .promo-title {
+            font-size: 24px; font-weight: 700; color: #191F28;
+            line-height: 1.4; margin-top: 60px; margin-bottom: 24px;
+            position: relative; z-index: 5;
+        }
+        .promo-btn {
+            width: 100%;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);
+            transition: transform 0.1s;
+        }
+        .promo-btn:active { transform: scale(0.98); }
+
+
+        /* --- 3. 기존 카드 스타일 --- */
+        .toss-card {
+            background: var(--card-white); border-radius: var(--card-radius);
+            margin: 0 20px 16px 20px; padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            overflow: hidden; position: relative;
+        }
+        /* 메인 스와이퍼 */
+        .main-swiper { padding-bottom: 0 !important; }
+        .banner-content h2 { font-size: 22px; font-weight: 700; line-height: 1.4; margin-bottom: 0px; color: var(--text-black);padding-top:18px;}
+        .banner-content p { font-size: 15px; color: var(--text-gray); margin-bottom: 20px; }
+        .toss-btn { width: 100%; background-color: var(--primary-blue); color: white; border: none; padding: 15px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .banner-obj { position: absolute; right: 0; top: 10px; font-size: 80px; opacity: 0.2; color: var(--primary-blue); transform: rotate(-15deg); }
+
+        /* 메뉴 그리드 */
+        .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px 0; margin-top: 10px; }
+        .menu-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .icon-box { width: 48px; height: 48px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: #f0f0f0; }
+        .menu-text { font-size: 13px; color: #4E5968; font-weight: 500; }
+
+        /* 리스트 로우 */
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F2F4F6; }
+        .list-row:last-child { border-bottom: none; }
+        .row-left { display: flex; align-items: center; gap: 16px; }
+        .circle-icon { width: 42px; height: 42px; border-radius: 50%; background: #F2F4F6; display: flex; justify-content: center; align-items: center; font-size: 18px; color: var(--text-gray); }
+        .info-text h4 { font-size: 14px; color: var(--text-gray); font-weight: 500; margin-bottom: 4px; }
+        .info-text p { font-size: 17px; font-weight: 700; color: var(--text-black); }
+        .gray-btn { background: #F2F4F6; color: #4E5968; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+
+        /* --- 보험 상품 리스트 스타일 --- */
+        .category-tabs { display: flex; flex-wrap: wrap;gap: 8px; margin-bottom: 20px; -ms-overflow-style: none; scrollbar-width: none; }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .pill-tab { padding: 9px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; background: #F2F4F6; color: #8B95A1; white-space: nowrap; cursor: pointer; }
+        .pill-tab.active { background: #333; color: #fff; }
+
+        .sec-header { padding: 16px 20px; margin: 0 -24px; font-size: 17px; font-weight: 700; display: flex; align-items: center; }
+        .bg-blue-light { background-color: #E8F3FF; color: #191F28; }
+        .bg-pink-light { background-color: #FFF0F5; color: #191F28; }
+
+  /* 2. Section Headers (Colored Backgrounds) */
+        .section-group { margin-bottom: 30px; }
+        .group-header {
+            padding: 18px 24px;
+            font-size: 17px; font-weight: 800;
+            margin: 0 -24px; /* Card padding 보정 */
+            color: #191F28;
+        }
+        /* Header Colors */
+        .bg-mint { background-color: #E3FDFD; color: #008f8f; } /* 자동차 */
+        .bg-pink { background-color: #FFF0F5; color: #d63384; } /* 건강 */
+        .bg-blue { background-color: #E8F3FF; color: #3182F6; } /* 여행 */
+        .prod-item { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid #F2F4F6; cursor: pointer; }
+        .prod-item:last-child { border-bottom: none; }
+        .prod-left { display: flex; align-items: center; gap: 14px; }
+        .prod-icon { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #333; }
+        .prod-info { display: flex; flex-direction: column; gap: 3px; }
+        .prod-title { font-size: 17px; font-weight: 600; color: var(--text-black); }
+        .prod-desc { font-size: 15px; color: var(--text-gray); }
+        .prod-arrow { color: #D1D6DB; font-size: 14px; }
+
+        /* 하단 설정 & 네비게이션 */
+        .bottom-setting { text-align: center; margin: 30px 0 10px 0; }
+        .setting-btn { background: #EAECEF; color: #8B95A1; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+       
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; justify-content: space-around; padding: 12px 0 30px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.03); z-index: 200; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #B1B8C0; cursor: pointer; }
+        .nav-item.active { color: var(--text-black); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+
+
+.fixed-header .logo {
+    background: url(https://m.directdb.co.kr/static/images/logo_db.svg) no-repeat 50% 50% / 100% auto;
+    display: block;
+    width: 10.2rem;
+    height: 2.6rem;}
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+   
+    <header class="fixed-header">
+	<h1>
+        	<a href="/" class="logo"></a>
+        </h1>
+
+    </header>
+
+    <div id="promo-banner">
+        <div class="promo-inner">
+            <div class="promo-close" onclick="closeBanner()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+           
+            <div class="coin-deco">
+                <div class="coin small"><i class="fa-solid fa-won-sign"></i></div>
+                <div class="coin large"><i class="fa-solid fa-won-sign"></i></div>
+            </div>
+
+            <div class="promo-title">
+                네이버지도 안전운전특약<br>친구소개 이벤트            </div>
+            <button class="promo-btn">확인하기</button>
+        </div>
+    </div>
+    <div class="swiper main-swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+                <div class="toss-card">
+                    <i class="fa-solid fa-coins banner-obj"></i>
+                    <div class="banner-content">
+                        <h2>운전자보험</h2>
+                        <p>숨은 보험금과 포인트를 찾아보세요</p>
+                        <button class="toss-btn">계산/가입하기</button>
+                    </div>
+                </div>
+            </div>
+             <div class="swiper-slide">
+                <div class="toss-card">
+                    <i class="fa-solid fa-car banner-obj" style="color:#28a745;"></i>
+                    <div class="banner-content">
+                        <h2>걸을수록 더 좋은 건강보험</h2>
+                        <p>1분 만에 최저가 확인하기</p>
+                        <button class="toss-btn" style="background:#28a745;">계산/가입하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toss-card">
+        <div class="menu-grid">
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-car" style="color:#333;"></i></div><span class="menu-text">자동차</span></div>
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-shield-heart" style="color:#28a745;"></i></div><span class="menu-text">건강보험</span></div>
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-fire" style="color:#ff4d4f;"></i></div><span class="menu-text">화재</span></div>
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-plane" style="color:#8a2be2;"></i></div><span class="menu-text">여행</span></div>
+<div class="menu-item"><div class="icon-box"><i class="fa-solid fa-shield-heart" style="color:#28a745;"></i></div><span class="menu-text">건강보험</span></div>
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-fire" style="color:#ff4d4f;"></i></div><span class="menu-text">화재</span></div>
+            <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-plane" style="color:#8a2be2;"></i></div><span class="menu-text">여행</span></div>
+ <div class="menu-item"><div class="icon-box"><i class="fa-solid fa-shield-heart" style="color:#28a745;"></i></div><span class="menu-text">건강보험</span></div>
+        </div>
+    </div>
+
+<div style="display:flex; padding: 0 20px; gap:14px; margin-bottom:16px;">
+        <div style="flex:1; background:white; padding:18px; border-radius:24px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <span style="font-weight:700; font-size:15px; line-height:1.3;">간편한<br>스마트 사전심사</span>
+            <i class="fa-solid fa-credit-card" style="font-size:24px; color:#95a5ff;"></i>
+        </div>
+        <div style="flex:1; background:white; padding:18px; border-radius:24px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <span style="font-weight:700; font-size:15px; line-height:1.3;">든든한<br>보장분석</span>
+            <i class="fa-solid fa-house-chimney" style="font-size:24px; color:#95a5ff;"></i>
+        </div>
+    </div>
+
+
+    <div class="toss-card" style="padding: 10px 24px;">
+        <div class="list-row">
+            <div class="row-left">
+                <div class="circle-icon" style="background:#E8F3FF; color:#3182F6;"><i class="fa-solid fa-receipt"></i></div>
+                <div class="info-text"><p>펫블리반려견보험</p><h4 style="margin-top:2px;">반려견 의료비 미리 준비하세요</h4></div>
+            </div>
+            <div class="gray-btn">가입/계산</div>
+        </div>
+    </div>
+
+    <div class="toss-card" style="padding-top: 24px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+            <span style="font-size:19px; font-weight:700;">보험상품</span>
+        </div>
+
+        <div class="category-tabs">
+            <div class="pill-tab active">자동차</div>
+            <div class="pill-tab">운전자</div>
+            <div class="pill-tab">건강</div>
+            <div class="pill-tab">유병자</div>
+<div class="pill-tab">자녀</div>
+            <div class="pill-tab">반려동물</div>
+            <div class="pill-tab">주택화재</div>
+<div class="pill-tab">여행</div>
+            <div class="pill-tab">골프</div>
+            <div class="pill-tab">실손</div>
+<div class="pill-tab">연금/자산</div>
+        </div>
+
+         <div class="section-group">
+            <div class="group-header bg-mint">자동차/운전자</div>
+           
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-car-side" style="color:#3182F6;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">자동차보험</span>
+                        <span class="prod-desc">365일 24시간!</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-desktop" style="color:#3182F6;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 자동차보험</span>
+                        <span class="prod-desc">든든하게 대비!</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-steering-wheel" style="color:#555;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">안전운전 파트너 플러스</span>
+                        <span class="prod-desc">운전자 보장(특약)</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-id-card" style="color:#3182F6;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 운전자보험</span>
+                        <span class="prod-desc">다이렉트로 저렴하게</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+             <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-motorcycle" style="color:#ff6b6b;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 오토바이 운전자보험</span>
+                        <span class="prod-desc">오토바이 전용</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+        </div>
+
+        <div class="section-group">
+            <div class="group-header bg-pink">건강/자녀/치아</div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-seedling" style="color:#ff6b6b;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">마이핏</span>
+                        <span class="prod-desc">이제는 보험도 가족과 함께</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-bottle-droplet" style="color:#00b894;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">보장어카운트</span>
+                        <span class="prod-desc">만기까지 걱정없이 매년 반복 보장(특약)</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-capsules" style="color:#ffb142;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">새로고침</span>
+                        <span class="prod-desc">무갱신형 건강보험</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+             <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-star" style="color:#ffcf5c;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">NEW 마이 슈퍼스타</span>
+                        <span class="prod-desc">자녀에게 생길 수 있는 위험을 보장</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+             <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-shield-virus" style="color:#0984e3;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">실손의료비보험</span>
+                        <span class="prod-desc">질병, 상해 치료비 보장</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-tooth" style="color:#a29bfe;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">덴탈파트너</span>
+                        <span class="prod-desc">치과 치료비 보장(특약)</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+        </div>
+
+        <div class="section-group" style="margin-bottom:0;">
+            <div class="group-header bg-blue">여행/레저</div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-suitcase-rolling" style="color:#ff9f43;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 해외여행보험</span>
+                        <span class="prod-desc">해외여행 중 상해/질병 표준의료비(특약)</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-plane-departure" style="color:#3182F6;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 글로벌케어</span>
+                        <span class="prod-desc">여행기간 3개월 이상 시</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+           
+            <div class="prod-item">
+                <div class="prod-left">
+                    <div class="prod-icon"><i class="fa-solid fa-golf-ball-tee" style="color:#2ecc71;"></i></div>
+                    <div class="prod-info">
+                        <span class="prod-title">다이렉트 스크린홀인원보험</span>
+                        <span class="prod-desc">스크린골프에서도 홀인원의 기쁨을</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right prod-arrow"></i>
+            </div>
+        </div>
+    </div>
+   
+    <div class="bottom-setting">
+        <div class="setting-btn">
+            <i class="fa-solid fa-gear"></i> 홈 화면 설정
+        </div>
+    </div>
+
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active">
+        <i class="fa-solid fa-house"></i>
+        <span>홈</span>
+    </div>
+    <div class="nav-item">
+        <i class="fa-regular fa-gem"></i>
+        <span>상품</span>
+    </div>
+    <div class="nav-item">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span>계약/보상</span>
+    </div>
+    <div class="nav-item">
+        <i class="fa-solid fa-arrow-trend-up"></i>
+        <span>관심</span>
+    </div>
+    <div class="nav-item">
+        <i class="fa-solid fa-bars"></i>
+        <span>전체</span>
+    </div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    // 1. Swiper Init
+    const mainSwiper = new Swiper('.main-swiper', {
+        loop: true,
+        autoplay: {
+            delay: 5000,
+            disableOnInteraction: false,
+        },
+        speed: 600,
+        spaceBetween: 20,
+    });
+
+    // 2. Banner Animation Script
+    document.addEventListener("DOMContentLoaded", () => {
+        // 0.5초 대기 후 배너 펼치기
+        setTimeout(() => {
+            const banner = document.getElementById('promo-banner');
+            banner.classList.add('active');
+        }, 500);
+    });
+
+    // 3. Close Banner Function
+    function closeBanner() {
+        const banner = document.getElementById('promo-banner');
+        banner.classList.remove('active');
+    }
+</script>
+
+</body>
+</html>
