@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>프롬프트 가이드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --item-bg: #f9fafb;
+            --primary-blue: #3182f6;
+            --text-main: #191f28;
+            --text-sub: #4e5968;
+            --text-grey: #8b95a1;
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* 폰트 적용 */
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* 메인 페이지 레이아웃 */
+        .container {
+            padding: 24px 20px;
+            max-width: 600px; /* 태블릿 대응 */
+            margin: 0 auto;
+        }
+
+        header {
+            margin-top: 20px;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.4;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        /* 메뉴 리스트 스타일 */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--item-bg);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            animation: slideUp 0.5s ease-out both;
+        }
+
+        .menu-item:active {
+            transform: scale(0.98);
+            background-color: #f2f4f6;
+        }
+
+        .icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .blue { background: #e8f3ff; color: #3182f6; }
+        .green { background: #e7f9f0; color: #1fb881; }
+        .purple { background: #f4f0ff; color: #8b5cf6; }
+
+        .info-content {
+            flex-grow: 1;
+        }
+
+        p.title {
+            font-size: 17px;
+            font-weight: 400;
+            color:#8b95a1;
+            margin-bottom: 20px;
+        }
+
+        .info-content .title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .info-content .desc {
+            font-size: 14px;
+            color: var(--text-grey);
+        }
+
+        .chevron {
+            color: #ccc;
+        }
+
+        /* 상세 화면 오버레이 (Full Screen) */
+        #detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #detail-overlay.active {
+            transform: translateX(0);
+        }
+
+        .nav-bar {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f2f4f6;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            margin-left: -8px;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            margin-left: 8px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 24px 20px;
+            overflow-y: auto;
+        }
+
+        .prompt-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-sub);
+            white-space: pre-wrap;
+            margin-bottom: 100px; /* 버튼 공간 확보 */
+            border: 1px solid #eee;
+        }
+
+        /* 하단 고정 버튼 구역 */
+        .bottom-action {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px 20px calc(16px + var(--safe-area-inset-bottom));
+            background: linear-gradient(to top, #fff 80%, rgba(255,255,255,0));
+        }
+
+        .copy-btn {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 18px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(49, 130, 246, 0.2);
+            display: block;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 스크롤바 숨기기 */
+        .content-body::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>프롬프트 가이드</h1>
+        <p class="title">원하시는 프롬프트를 복사해서 여러번 반복하세요~</p>
+    </header>
+
+    <div class="menu-list">
+        <div class="menu-item" onclick="showPrompt('image')" style="animation-delay: 0.1s;">
+            <div class="icon-wrapper blue"><i data-lucide="image"></i></div>
+            <div class="info-content">
+                <div class="title">이미지 생성</div>
+                <div class="desc">홍보 배너 및 디자인 소스 제작</div>
+            </div>
+            <div class="chevron"><i data-lucide="chevron-right"></i></div>
+        </div>
+
+        <div class="menu-item" onclick="showPrompt('marketing')" style="animation-delay: 0.2s;">
+            <div class="icon-wrapper green"><i data-lucide="megaphone"></i></div>
+            <div class="info-content">
+                <div class="title">마케팅 문구 생성</div>
+                <div class="desc">전문 카피라이터의 문구 제안</div>
+            </div>
+            <div class="chevron"><i data-lucide="chevron-right"></i></div>
+        </div>
+
+        <div class="menu-item" onclick="showPrompt('ppt')" style="animation-delay: 0.3s;">
+            <div class="icon-wrapper purple"><i data-lucide="presentation"></i></div>
+            <div class="info-content">
+                <div class="title">PPT 디자인 프롬프트</div>
+                <div class="desc">고급스러운 발표 자료 기획</div>
+            </div>
+            <div class="chevron"><i data-lucide="chevron-right"></i></div>
+        </div>
+    </div>
+</div>
+
+<div id="detail-overlay">
+    <div class="nav-bar">
+        <button class="back-btn" onclick="closePrompt()">
+            <i data-lucide="chevron-left" style="width: 28px; height: 28px;"></i>
+        </button>
+        <span class="nav-title" id="detail-title">가이드</span>
+    </div>
+    <div class="content-body">
+        <div id="prompt-view" class="prompt-card"></div>
+    </div>
+    <div class="bottom-action">
+        <button class="copy-btn" onclick="copyText()">복사하기</button>
+    </div>
+</div>
+
+<script>
+    // 아이콘 초기화
+    lucide.createIcons();
+
+    const prompts = {
+        image: `[이미지 생성 프롬프트]
+- 목적: 모바일 앱 이벤트 홍보 배너 이미지 제작
+- 메인 주제: 신규 가입 고객 할인 혜택 안내
+- 주요 오브젝트: 이벤트 화면이 표시된 스마트폰
+- 배경 스타일: 깔끔한 그라데이션 UI 배경
+- 디자인 스타일: 현대적인 UI 그래픽 스타일
+- 분위기: 밝고 신뢰감 있는 전문적인 느낌
+- 컬러 구성: 블루와 그린 중심의 브랜드 컬러
+- 조명 효과: 부드러운 간접 조명과 은은한 글로우
+- 카메라 각도: 아이소메트릭 뷰
+- 레이아웃 구성: 좌측 이미지, 우측 텍스트 배치
+- 품질 기준: 초고해상도, 선명하고 깔끔한 디테일
+- 출력 설정: 비율 16:9, 해상도 1920x1080
+- 추가 요구: 오른쪽에 마케팅 문구 영역 확보`,
+
+        marketing: `당신은 전문 마케팅 카피라이터입니다.
+
+목적(Purpose): 이벤트 광고 문구 제작
+대상 서비스/제품: 온라인 보험상품몰
+
+핵심 가치:
+- 최대 할인, 특약 신설
+- 인기 상품 
+
+타겟 고객:
+20~50대 남성/여성, 합리적인 소비를 선호하는 고객
+
+마케팅 목표: 구매 전환 유도
+사용 채널: 홈페이지 홍보 이미지
+톤앤매너: 트렌디하고 감각적인 톤
+강조 포인트: 특약할인
+금지 표현: 허위 할인 표현 금지
+
+요청 결과 형식:
+- 메인 카피 10개 / 서브 카피 10개
+- CTA 문구 10개 / 20자 이내 짧은 버전 10개
+
+작성 가이드:
+- 짧고 임팩트 있는 문장
+- 구매 욕구를 자극하는 표현`,
+
+        ppt: `[PPT 디자인 기획 프롬프트]
+- 주제: 기업 IT 전략 보고서
+- 스타일: 'Apple' 스타일의 미니멀리즘 디자인
+- 레이아웃: 여백의 미를 살린 중앙 집중형 구조
+- 폰트: 산세리프 계열 (Pretendard/Noto Sans) 굵기 대비 강조
+- 컬러: Deep Navy(#001D3D) 배경 + Electric Mint 포인트 컬러
+- 시각 요소: 유리 질감(Glassmorphism)의 인포그래픽, 3D 가상 오브젝트
+- 슬라이드 구성:
+  1. Title: 강렬한 워드마크 중심
+  2. Index: 깔끔한 리스트와 아이콘
+  3. Body: 시각적 데이터 차트 중심 (최소한의 텍스트)
+  4. Conclusion: 비전 메시지 강조`
+    };
+
+    function showPrompt(type) {
+        const titles = { image: '이미지 생성 가이드', marketing: '마케팅 카피 가이드', ppt: 'PPT 디자인 가이드' };
+        document.getElementById('detail-title').innerText = titles[type];
+        document.getElementById('prompt-view').innerText = prompts[type];
+        document.getElementById('detail-overlay').classList.add('active');
+        
+        // 상세페이지 진입 시 스크롤 최상단으로
+        document.querySelector('.content-body').scrollTop = 0;
+    }
+
+    function closePrompt() {
+        document.getElementById('detail-overlay').classList.remove('active');
+    }
+
+    function copyText() {
+        const text = document.getElementById('prompt-view').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            // 토스 스타일 알림창 대체용 간단 알림
+            alert('복사되었습니다.');
+        });
+    }
+</script>
+
+</body>
+</html>
