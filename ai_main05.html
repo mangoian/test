@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 프롬프트 아키텍트</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F2F4F6;
+            --primary-color: #0064FF;
+            --primary-hover: #0056DB;
+            --text-main: #191F28;
+            --text-sub: #4E5968;
+            --white: #FFFFFF;
+            --border-color: #E5E8EB;
+            --point-gradient: linear-gradient(135deg, #9900F0, #FF85B3, #8fd3f4, #70a1ff);
+        }
+
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .screen.active { display: flex; }
+
+        .main-title {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* PPT 버튼을 위해 마지막 버튼이 한 줄을 다 차지하도록 설정 */
+        .menu-card.full {
+            grid-column: span 2;
+        }
+
+        .menu-card {
+            background: var(--white);
+            padding: 24px 16px;
+            border-radius: 28px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+        .menu-card:active { transform: scale(0.95); }
+        
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            background: #F2F4F6;
+            border-radius: 16px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-card span { font-weight: 700; font-size: 15px; }
+
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .chat-header {
+            position: sticky;
+            top: 0;
+            background: rgba(242, 244, 246, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 30px 20px 20px;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .chat-messages { flex: 1; padding: 20px; padding-bottom: 120px; }
+
+        .bubble-row {
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .bot-bubble-wrapper {
+            align-self: flex-start;
+            position: relative;
+            padding: 2px;
+            background: var(--point-gradient);
+            border-radius: 20px 20px 20px 4px;
+            max-width: 85%;
+        }
+        .bot-bubble {
+            background: var(--white);
+            padding: 14px 18px;
+            border-radius: 18px 18px 18px 2px;
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .user-bubble {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 14px 18px;
+            border-radius: 20px 20px 4px 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 500;
+            max-width: 85%;
+        }
+
+        .option-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .opt-btn {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-sub);
+        }
+        .opt-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
+        .sticky-footer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+        }
+
+        .home-btn {
+            width: 100%; max-width: 460px;
+            background-color: var(--primary-color);
+            color: white; border: none; padding: 16px;
+            border-radius: 16px; font-size: 16px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0, 100, 255, 0.2);
+        }
+
+        .result-box {
+            margin-top: 16px; padding: 16px; background: #F9FAFB;
+            border-radius: 16px; border: 1px dashed #D1D5DB;
+        }
+        .copy-btn {
+            background: var(--primary-color); color: white; border: none; padding: 6px 12px;
+            border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; float: right;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="screen-idle" class="screen active">
+        <h1 class="main-title">안녕하세요.<br>필요한 프롬프트를 선택하세요.</h1>
+        <div class="menu-grid">
+            <button class="menu-card" onclick="startFlow('IMAGE')">
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0064FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                </div>
+                <span>이미지 생성</span>
+            </button>
+            <button class="menu-card" onclick="startFlow('MARKETING')">
+                <div class="icon-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0064FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                </div>
+                <span>마케팅 문구</span>
+            </button>
+            <button class="menu-card full" onclick="startFlow('PPT')">
+                <div class="icon-box" style="background: #FFF0F6;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                        <path d="M8 12h8" /><path d="M8 8h8" /><path d="M8 16h5" />
+                    </svg>
+                </div>
+                <span>PPT 디자인</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-chat" class="screen" style="padding: 0; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+        <div class="chat-container">
+            <header class="chat-header">
+                <b id="chat-title" style="font-size: 18px;">프롬프트 설계</b>
+            </header>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="sticky-footer">
+                <button class="home-btn" onclick="resetApp()">홈으로 가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatData = {
+            IMAGE: [
+                { q: "반갑습니다! 👋<br>어디에 사용하실 이미지인가요?", opts: ["SNS 광고용", "웹사이트 메인", "개인 브랜딩", "상세페이지"] },
+                { q: "이미지 스타일을 선택해주세요.", opts: ["실사(Photo)", "3D 일러스트", "미니멀 2D", "유화 느낌"] },
+                { q: "주요 컬러 테마를 골라주세요.", opts: ["토스 블루", "따뜻한 오렌지", "심플 블랙", "내추럴 그린"] }
+            ],
+            MARKETING: [
+                { q: "마케팅 전문가 AI입니다. ✍️<br>문구를 어떤 채널에 사용하실 건가요?", opts: ["홈페이지/모바일", "기획안", "홍보안내자료", "기타"] },
+                { q: "작성 목적이 무엇인가요?", opts: ["구매 유도", "브랜드 인지", "신뢰감 형성", "궁금증 유발"] },
+                { q: "원하시는 톤앤매너를 골라주세요.", opts: ["전문적인", "친근하고 따뜻한", "트렌디한", "직관적인"] }
+            ],
+            // 추가된 PPT 질문 데이터
+            PPT: [
+                { q: "PPT 디자인 전문가입니다. 📊<br>어떤 느낌의 테마를 원하시나요?", opts: ["미니멀/심플", "비즈니스/신뢰", "창의적/화려한", "다크모드/IT"] },
+                { q: "가장 강조하고 싶은 포인트 컬러는?", opts: ["기업용 블루", "에너지 오렌지", "모던 그레이", "비비드 퍼플"] },
+                { q: "PPT의 주요 용도가 무엇인가요?", opts: ["제안서/피칭", "강의/교육", "성과보고서", "브랜드 소개"] }
+            ]
+        };
+
+        let currentMode = '';
+        let currentStep = 0;
+        let selections = [];
+
+        function startFlow(mode) {
+            currentMode = mode;
+            currentStep = 0;
+            selections = [];
+            document.getElementById('screen-idle').style.display = 'none';
+            document.getElementById('screen-chat').style.display = 'block';
+            
+            const titles = {
+                'IMAGE': '이미지 프롬프트 설계',
+                'MARKETING': '마케팅 카피 설계',
+                'PPT': 'PPT 디자인 프롬프트 설계'
+            };
+            document.getElementById('chat-title').innerText = titles[mode];
+            document.getElementById('chat-messages').innerHTML = '';
+            showNextQuestion();
+        }
+
+        function resetApp() {
+            document.getElementById('screen-chat').style.display = 'none';
+            document.getElementById('screen-idle').style.display = 'flex';
+        }
+
+        function addMessage(type, text, options = []) {
+            const container = document.getElementById('chat-messages');
+            const row = document.createElement('div');
+            row.className = `bubble-row`;
+            
+            if (type === 'bot') {
+                row.innerHTML = `<div class="bot-bubble-wrapper"><div class="bot-bubble">${text}</div></div>`;
+            } else {
+                row.innerHTML = `<div class="user-bubble">${text}</div>`;
+            }
+            
+            if (options.length > 0) {
+                const optList = document.createElement('div');
+                optList.className = 'option-list';
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'opt-btn';
+                    btn.innerText = opt;
+                    btn.onclick = () => handleSelect(opt);
+                    optList.appendChild(btn);
+                });
+                row.appendChild(optList);
+            }
+            
+            container.appendChild(row);
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function handleSelect(val) {
+            const currentOpts = document.querySelectorAll('.option-list');
+            if(currentOpts.length) currentOpts[currentOpts.length-1].style.display = 'none';
+
+            selections.push(val);
+            addMessage('user', val);
+            currentStep++;
+
+            setTimeout(() => {
+                if (currentStep < chatData[currentMode].length) {
+                    showNextQuestion();
+                } else {
+                    showResult();
+                }
+            }, 600);
+        }
+
+        function showNextQuestion() {
+            const data = chatData[currentMode][currentStep];
+            addMessage('bot', data.q, data.opts);
+        }
+
+        function showResult() {
+            let prompt = "";
+            if(currentMode === 'PPT') {
+                const [style, color, usage] = selections;
+                prompt = `당신은 세계적인 PPT 디자이너입니다. 다음 조건에 맞는 '고급 슬라이드 레이아웃'을 구성해주세요.\n\n` +
+                         `- 전체 스타일: ${style} 무드의 모던한 디자인\n` +
+                         `- 포인트 컬러: ${color} 계열 사용\n` +
+                         `- 용도: ${usage}용 고퀄리티 슬라이드\n` +
+                         `- 상세 요청: 가독성 높은 산세리프 폰트 조합, 미니멀한 라인형 아이콘 사용, 넓은 여백 활용(White Space), 데이터 시각화(인포그래픽) 강조. 각 슬라이드별 핵심 비주얼 가이드를 상세히 적어줘.`;
+            } else if(currentMode === 'IMAGE') {
+                prompt = `High-quality ${selections[1]} image for ${selections[0]}, color theme ${selections[2]}, 8k resolution --ar 1:1`;
+            } else {
+                prompt = `당신은 마케팅 카피라이터입니다. ${selections[0]}용으로 ${selections[1]}를 위해 ${selections[2]} 톤으로 5개 제안하세요.`;
+            }
+
+            const resultHtml = `
+                설계가 완료되었습니다!<br>
+                <div class="result-box">
+                    <button class="copy-btn" onclick="copyText('${prompt}')">복사</button>
+                    <div style="font-family:monospace; font-size:12px; color:#333; margin-top:35px; word-break:break-all; white-space: pre-wrap;">${prompt}</div>
+                </div>
+            `;
+            addMessage('bot', resultHtml);
+        }
+
+        function copyText(txt) {
+            navigator.clipboard.writeText(txt).then(() => alert("클립보드에 복사되었습니다. 😊"));
+        }
+    </script>
+</body>
+</html>
