@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DB 약관 렌더링 시스템</title>
+     <!-- lottie-web 라이브러리 -->
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --db-green: #00a45e;
+            --db-bg: #f2f4f6;
+            --db-text-1: #191f28;
+            --db-text-2: #4e5968;
+            --db-border: #e5e8eb;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; letter-spacing: -0.4px; }
+        body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--db-bg); color: var(--db-text-1); height: 100%; overflow: hidden; }
+
+        #app { max-width: 480px; margin: 0 auto; background: var(--white); height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; border-right: 1px solid #eee; border-left: 1px solid #eee; }
+
+        /* Header */
+        header { 
+            height: 56px; display: none; align-items: center; padding: 0 8px; 
+            background: var(--white); border-bottom: 1px solid #f2f4f6; position: sticky; top: 0; z-index: 50;
+        }
+        .back-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+
+        /* Screens */
+        .screen { display: none; padding: 24px; flex: 1; overflow-y: auto; flex-direction: column; height: calc(100% - 56px); }
+        .screen.active { display: flex; }
+
+        /* Landing */
+        #landing-screen {align-items: center; text-align: center; }
+        lottie-player { width: 200px; height: 200px; margin-bottom: 20px; }
+        .title { font-size: 26px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; }
+
+        /* Chat UI */
+        #chat-content { padding-bottom: 180px; }
+        .msg-row { margin-bottom: 28px; opacity: 0; transform: translateY(10px); transition: 0.4s ease; }
+        .msg-row.show { opacity: 1; transform: translateY(0); }
+        .bot-bubble { background: #f2f4f6; padding: 16px 20px; border-radius: 20px 20px 20px 4px; max-width: 85%; font-size: 15px; font-weight: 500; line-height: 1.5; }
+        .btn-wrap { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .db-chip { background: white; border: 1px solid var(--db-border); padding: 12px 18px; border-radius: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .db-chip.active { background: var(--db-green); color: white; border-color: var(--db-green); }
+
+        .db-textarea { width: 100%; height: 160px; border: 1px solid var(--db-border); border-radius: 16px; padding: 16px; margin-top: 12px; background: #f9fafb; resize: none; font-family: inherit; outline: none; }
+
+        /* Loading Screen */
+        #loading-overlay { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background: rgba(255,255,255,0.95); z-index: 2000; 
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--db-green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Preview Screen */
+        .preview-header { font-size: 22px; font-weight: 700; margin-bottom: 24px; padding-top: 10px; }
+        .all-agree-box { background: #f9fafb; padding: 22px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; cursor: pointer; border: 1px solid #f2f4f6; }
+        .agree-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px 18px 4px; border-bottom: 1px solid #f2f4f6; cursor: pointer; }
+        
+        .circle-chk { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e8eb; position: relative; }
+        .circle-chk.checked { background: var(--db-green); border-color: var(--db-green); }
+        .circle-chk.checked::after { content: ''; position: absolute; left: 7px; top: 3px; width: 5px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+        /* Bottom Sheet */
+        #bottom-sheet {
+            position: absolute; bottom: -100%; left: 0; right: 0; height: 85%;
+            background: white; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            z-index: 1000; transition: bottom 0.4s cubic-bezier(0.12, 0.8, 0.32, 1);
+            display: flex; flex-direction: column;
+        }
+        #bottom-sheet.active { bottom: 0; }
+        .sheet-header { padding: 20px; text-align: center; font-weight: 700; border-bottom: 1px solid #f2f4f6; }
+        .sheet-content { flex: 1; overflow-y: auto; padding: 24px; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+
+        /* Buttons */
+        .bottom-area { padding: 16px 24px 34px; background: white; border-top: 1px solid #f2f4f6; }
+        .db-btn { width: 100%; padding: 18px; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
+        .db-btn-main { background: var(--db-green); color: white; }
+        .db-btn-sub { background: #e8f5ee; color: var(--db-green); }
+        .db-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+  #lottieContainer {
+width: 200px;
+    height: 200px;
+    margin: 110px auto 0;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight:600; color:var(--db-text-1);">동의 화면을 생성하고 있습니다...</p>
+    </div>
+
+    <header id="app-header">
+        <button class="back-btn" onclick="goBack()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18L9 12L15 6" stroke="#191F28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span style="font-weight: 700; margin-left: 4px;">이전</span>
+    </header>
+
+          
+        <section id="landing-screen" class="screen active">
+<div id="lottieContainer"></div>
+        <h1 class="title">DB 맞춤형 약관<br>자동 생성 시스템</h1>
+        <p style="color:var(--db-text-2)">복잡한 약관도 모바일 최적화<br>UI로 즉시 변환됩니다.</p>
+        <div class="bottom-area" style="position:absolute; bottom:0; left:0; right:0;">
+            <button class="db-btn db-btn-main" onclick="changeScreen('chat')">동의화면 만들기</button>
+        </div>
+    </section>
+
+  <script>
+    lottie.loadAnimation({
+      container: document.getElementById('lottieContainer'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'a.json'  
+    });
+  </script>
+
+    <section id="chat-screen" class="screen">
+        <div id="chat-content"></div>
+        <div class="bottom-area" id="chat-nav" style="display:none; position:absolute; bottom:0; left:0; right:0;"></div>
+    </section>
+
+    <section id="preview-screen" class="screen">
+        <div class="preview-header">약관 동의</div>
+        <div class="all-agree-box" onclick="openBottomSheet()">
+            <strong>모든 약관에 동의합니다</strong>
+            <div id="all-chk" class="circle-chk"></div>
+        </div>
+        <div id="preview-list"></div>
+        <div class="bottom-area" style="position:absolute; bottom:0; left:0; right:0;">
+            <button class="db-btn db-btn-main" onclick="goBack()">처음으로</button>
+        </div>
+    </section>
+
+    <div class="overlay" onclick="closeBottomSheet()"></div>
+    <div id="bottom-sheet">
+        <div class="sheet-header">상세 약관</div>
+        <div class="sheet-content" id="sheet-body"></div>
+        <div class="bottom-area">
+            <button class="db-btn db-btn-main" onclick="confirmAll()">확인 및 동의</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let config = { type: "", count: 0, text: "" };
+
+    function changeScreen(scr) {
+        $('.screen').removeClass('active').hide();
+        $(`#${scr}-screen`).addClass('active').fadeIn();
+        if(scr === 'chat') { $('#app-header').css('display', 'flex'); addBotMsg("만드실 동의 화면을 선택해주세요.", [{l:"필수동의", v:"필수"},{l:"선택동의", v:"선택"},{l:"필수+선택동의", v:"혼합"}], 'step1'); }
+        else { $('#app-header').hide(); }
+    }
+
+    function goBack() { location.reload(); }
+
+    function addBotMsg(txt, btns = [], stepKey = "") {
+        const id = 'msg-' + Date.now();
+        let btnHtml = btns.map(b => `<button class="db-chip" onclick="handleChoice('${stepKey}', '${b.v}', this)">${b.l}</button>`).join('');
+        $('#chat-content').append(`<div class="msg-row" id="${id}"><div class="bot-bubble">${txt}</div><div class="btn-wrap">${btnHtml}</div></div>`);
+        setTimeout(() => { $(`#${id}`).addClass('show'); scrollChat(); }, 100);
+    }
+
+    function handleChoice(step, val, el) {
+        $(el).siblings().removeClass('active'); $(el).addClass('active');
+        if(step === 'step1') { config.type = val; addBotMsg("세부 동의 항목은 몇 개인가요?", [{l:"1개",v:1},{l:"2개",v:2},{l:"3개",v:3},{l:"4개",v:4},{l:"5개",v:5}], 'step2'); }
+        else if(step === 'step2') {
+            config.count = val;
+            $('#chat-content').append(`<div class="msg-row show"><div class="bot-bubble">상세 약관 내용을 입력창에 넣어주세요.</div><textarea class="db-textarea" id="raw-text" placeholder="내용을 입력하세요..."></textarea></div>`);
+            $('#chat-nav').html(`<button class="db-btn db-btn-main" onclick="processAnalysis()">동의화면 생성하기</button>`).fadeIn();
+            scrollChat();
+        }
+    }
+
+    function processAnalysis() {
+        config.text = $('#raw-text').val();
+        if(!config.text) return alert("약관 내용을 입력해주세요.");
+        
+        $('#loading-overlay').css('display', 'flex'); // 3초 로딩 시작
+        
+        setTimeout(() => {
+            $('#loading-overlay').hide();
+            addBotMsg("동의화면 생성이 완료되었습니다. <br>아래 버튼으로 확인하거나 다운로드하세요.");
+            $('#chat-nav').html(`
+                <button class="db-btn db-btn-main" onclick="showPreview()">동의화면 확인</button>
+                <button class="db-btn db-btn-sub" onclick="downloadUI()">동의화면 UI 다운로드</button>
+                <button class="db-btn db-btn-sub" onclick="downloadDetailed()">상세약관 HTML 다운로드</button>
+            `);
+            scrollChat();
+        }, 3000); // 3초 대기
+    }
+
+    function showPreview() {
+        let listHtml = "";
+        for(let i=0; i<config.count; i++) {
+            listHtml += `<div class="agree-item" onclick="openBottomSheet()"><span style="font-size:16px;">[${config.type}] 동의 항목 ${i+1}</span><div style="display:flex; align-items:center; gap:12px;"><div class="circle-chk sub-chk"></div></div></div>`;
+        }
+        $('#preview-list').html(listHtml);
+        $('#sheet-body').html(parseText(config.text));
+        changeScreen('preview');
+    }
+
+    function parseText(t) {
+        return t.split('\n').map(l => {
+            l = l.trim(); if(!l) return '';
+            if(l.includes('제')) return `<h3 style="margin:20px 0 10px; font-size:17px; font-weight:800;">${l}</h3>`;
+            if(l.startsWith('□')) return `<div style="background:#f2f4f6; padding:12px; font-weight:700; border-radius:8px; margin:16px 0 8px;">${l}</div>`;
+            return `<p style="font-size:14px; color:#666; margin:4px 0 4px 10px; line-height:1.6;">${l}</p>`;
+        }).join('');
+    }
+
+    function openBottomSheet() { $('.overlay').fadeIn(200); $('#bottom-sheet').addClass('active'); }
+    function closeBottomSheet() { $('.overlay').fadeOut(200); $('#bottom-sheet').removeClass('active'); }
+    function confirmAll() { closeBottomSheet(); setTimeout(() => { $('#all-chk, .sub-chk').addClass('checked'); }, 300); }
+
+    // 다운로드 로직: 동의화면 UI
+    function downloadUI() {
+        const uiHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>동의화면</title><style>body{font-family:sans-serif;padding:30px;}.box{background:#f9fafb;padding:20px;border-radius:15px;margin-bottom:20px;display:flex;justify-content:space-between;}.item{padding:15px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;}.btn{width:100%;padding:20px;background:#00a45e;color:white;border:none;border-radius:15px;font-size:18px;margin-top:40px;}</style></head><body><h1>서비스 <br>약관 동의</h1><div class="box"><strong>전체 동의</strong><span>O</span></div>${Array.from({length:config.count}).map((_,i)=>`<div class="item"><span>[${config.type}] 항목 ${i+1}</span><span>〉</span></div>`).join('')}<button class="btn">확인</button></body></html>`;
+        saveFile('DB_동의화면_UI.html', uiHtml);
+    }
+
+    // 다운로드 로직: 상세 약관
+    function downloadDetailed() {
+        const detailedHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>상세약관</title><style>body{font-family:sans-serif;line-height:1.6;padding:40px;max-width:800px;margin:auto;}h1{border-bottom:2px solid #00a45e;padding-bottom:10px;}h3{margin-top:30px;color:#111;}div{background:#f4f4f4;padding:10px;margin:15px 0;font-weight:bold;}</style></head><body><h1>상세 약관 안내</h1>${parseText(config.text)}</body></html>`;
+        saveFile('DB_상세약관_정리.html', detailedHtml);
+    }
+
+    function saveFile(filename, content) {
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    }
+
+    function scrollChat() { $('#chat-screen').animate({ scrollTop: $('#chat-screen')[0].scrollHeight }, 500); }
+</script>
+
+</body>
+</html>
