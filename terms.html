@@ -22,7 +22,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; letter-spacing: -0.4px; }
         body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--db-bg); color: var(--db-text-1); height: 100%; overflow: hidden; }
 
-        #app { max-width: 480px; margin: 0 auto; background: var(--white); height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; border-right: 1px solid #eee; border-left: 1px solid #eee; }
+        #app { max-width: 480px; margin: 0 auto; background: var(--white); height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; border-right: 1px solid #eee; border-left: 1px solid #eee; }
 
         /* Header */
         header { 
@@ -82,7 +82,7 @@
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
 
         /* Buttons */
-        .bottom-area { padding: 16px 24px 34px; background: white; border-top: 1px solid #f2f4f6; }
+        .bottom-area { padding: calc(34px + env(safe-area-inset-bottom)); background: white; border-top: 1px solid #f2f4f6; }
         .db-btn { width: 100%; padding: 18px; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
         .db-btn-main { background: var(--db-green); color: white; }
         .db-btn-sub { background: #e8f5ee; color: var(--db-green); }
