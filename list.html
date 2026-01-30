@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보험 정보 카드 리스트</title>
+    <style>
+        /* 기본 배경 및 폰트 설정 */
+        body {
+            background-color: #f5f7f9;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px; /* 모바일 적정 너비 */
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* 카드 사이 간격 */
+        }
+
+        /* 카드 박스 스타일 */
+        .card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .card:active {
+            transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
+        }
+
+        /* 텍스트 스타일 */
+        .card-label {
+            color: #8b95a1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            color: #191f28;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .card-title span {
+            color: #adb5bd; /* '???' 부분 색상 */
+        }
+
+        /* 버튼 스타일 */
+        .card-button {
+            display: block;
+            width: 100%;
+            background-color: #3182f6;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            padding: 14px 0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .card-button:hover {
+            background-color: #1b64da;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-label">화면UI테스트_토스</div>
+            <div class="card-title">CM시안 퍼블</div>
+            <a href="https://mangoian.github.io/test/index.html" class="card-button">확인</a>
+        </div>
+
+        <div class="card">
+            <div class="card-label">프롬프트 카피해서 사용해</div>
+            <div class="card-title">프롬프트 가이드</div>
+            <a href="https://mangoian.github.io/test/ai_main06.html" class="card-button">확인</a>
+        </div>
+
+        <div class="card">
+            <div class="card-label">ai로 프롬프트를 생성해봐</div>
+            <div class="card-title">프롬프트 생성챗봇</div>
+            <a href="https://mangoian.github.io/test/ai_main05.html" class="card-button">확인</a>
+        </div>
+
+        <div class="card">
+            <div class="card-label">동의화면 간편하게 생성헤</div>
+            <div class="card-title">표준동의/약관 생성</div>
+            <a href="https://mangoian.github.io/test/terms.html" class="card-button">확인</a>
+        </div>
+
+        <div class="card">
+            <div class="card-label">그린캐시백 시안샘플</div>
+            <div class="card-title">프로미그린캐시백시안</div>
+            <a href="https://shdemo.vercel.app" class="card-button">확인</a>
+        </div>
+
+        <div class="card">
+            <div class="card-label">포토샵 없이 이미지 생성해</div>
+            <div class="card-title">(샘플)배너자동생성기</div>
+            <a href="https://t6g6xj.csb.app" class="card-button">확인</a>
+        </div>
+    </div>
+
+</body>
+</html>
