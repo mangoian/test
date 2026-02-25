@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SlideForge AI — 토스 스타일 리뉴얼</title>
+<style>
+  /* ━━━ Toss Design System Style ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  :root {
+    --toss-blue: #0064ff;
+    --toss-blue-hover: #0051cf;
+    --toss-bg: #f2f4f6;
+    --toss-card: #ffffff;
+    --toss-text: #191f28;
+    --toss-grey-600: #4e5968;
+    --toss-grey-400: #8b95a1;
+    --toss-grey-200: #e5e8eb;
+    --radius-l: 24px;
+    --radius-m: 16px;
+    --radius-s: 12px;
+    --font-ui: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    height: 100vh;
+    font-family: var(--font-ui);
+    background-color: var(--toss-bg);
+    color: var(--toss-text);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button { cursor: pointer; font-family: inherit; border: none; transition: 0.2s; }
+  textarea, input, select { font-family: inherit; outline: none; border: none; }
+
+  /* ━━━ Layout ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  header {
+    height: 70px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--toss-grey-200);
+    z-index: 100;
+  }
+  .logo { font-size: 20px; font-weight: 800; color: var(--toss-text); display: flex; align-items: center; gap: 8px; }
+  .logo span { color: var(--toss-blue); }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 420px 1fr 340px;
+    gap: 20px;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .panel {
+    background: var(--toss-card);
+    border-radius: var(--radius-l);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ━━━ Left: Editor ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .editor-header { padding: 24px 24px 12px; }
+  .editor-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+ 
+  .input-area { flex: 1; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+  textarea {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: var(--radius-m);
+    padding: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    border: 1px solid transparent;
+  }
+  textarea:focus { border-color: var(--toss-blue); background: #fff; }
+
+  .config-row { display: flex; gap: 10px; padding: 20px 24px; }
+  .toss-select {
+    flex: 1;
+    background: var(--toss-bg);
+    padding: 12px 16px;
+    border-radius: var(--radius-s);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .btn-main {
+    background: var(--toss-blue);
+    color: #fff;
+    padding: 16px;
+    border-radius: var(--radius-m);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 24px 24px;
+  }
+  .btn-main:hover { background: var(--toss-blue-hover); transform: translateY(-1px); }
+
+  /* ━━━ Center: Preview ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .preview-panel { background: transparent; }
+  .canvas-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: #e5e8eb;
+    border-radius: var(--radius-l);
+    overflow: auto;
+  }
+  #slide-canvas {
+    background: white;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    border-radius: 4px; /* 슬라이드 자체는 각진 형태 유지 */
+    min-width: 800px;
+    aspect-ratio: 16/9;
+  }
+
+  .preview-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    padding: 20px;
+  }
+  .nav-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* ━━━ Right: Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .detail-content { padding: 24px; }
+  .info-group { margin-bottom: 24px; }
+  .info-label { font-size: 13px; color: var(--toss-grey-400); font-weight: 600; margin-bottom: 6px; }
+  .info-value { font-size: 16px; font-weight: 700; }
+ 
+  .layout-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  /* ━━━ Common ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(25, 31, 40, 0.9);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 1000;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.8);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+  }
+  .spinner { width: 40px; height: 40px; border: 4px solid var(--toss-bg); border-top-color: var(--toss-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="logo">Slide<span>Forge</span> AI</div>
+    <div style="display:flex; gap:12px;">
+      <button class="toss-select" onclick="loadSample()" style="cursor:pointer">샘플 불러오기</button>
+      <button class="toss-select" onclick="downloadAll()" style="background:var(--toss-text); color:#fff; cursor:pointer">전체 다운로드</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="editor-header">
+        <h2>슬라이드 생성</h2>
+        <p style="color:var(--toss-grey-400); font-size:14px;">기획안 내용을 입력하면 AI가 슬라이드를 구성합니다.</p>
+      </div>
+      <div class="input-area">
+        <textarea id="prompt-input" placeholder="여기에 기획안이나 목차 내용을 입력하세요..."></textarea>
+      </div>
+      <div class="config-row">
+        <select id="theme-select" class="toss-select">
+          <option value="MODERN">모던 코발트</option>
+          <option value="DARK">다크 프리미엄</option>
+          <option value="VIVID">비비드 오렌지</option>
+        </select>
+        <select id="ratio-select" class="toss-select">
+          <option value="16:9">16:9 Wide</option>
+          <option value="4:3">4:3 Standard</option>
+        </select>
+      </div>
+      <button class="btn-main" id="generate-btn" onclick="generateSlides()">슬라이드 생성하기</button>
+     
+      <div class="loading-overlay" id="loader">
+        <div style="text-align:center">
+          <div class="spinner"></div>
+          <p style="margin-top:16px; font-weight:700; color:var(--toss-blue)">AI가 디자인하는 중...</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="canvas-container">
+        <canvas id="slide-canvas" width="1280" height="720"></canvas>
+      </div>
+      <div class="preview-controls">
+        <button class="nav-btn" onclick="prevSlide()">‹</button>
+        <div style="font-weight:700; font-size:16px;"><span id="cur-idx">0</span> / <span id="total-idx">0</span></div>
+        <button class="nav-btn" onclick="nextSlide()">›</button>
+      </div>
+    </section>
+
+    <section class="panel" id="detail-panel" style="display:none;">
+      <div class="detail-content">
+        <h3 id="detail-title" style="margin-bottom:24px; font-size:18px;">분석 정보</h3>
+        <div class="info-group">
+          <div class="info-label">레이아웃 타입</div>
+          <div class="info-value" id="detail-layout">—</div>
+        </div>
+        <div class="info-group">
+          <div class="info-label">핵심 키워드</div>
+          <div class="info-value" id="detail-keywords">—</div>
+        </div>
+        <div class="info-group">
+          <div class="info-label">불렛 포인트 수</div>
+          <div class="info-value" id="detail-bullets">0개</div>
+        </div>
+        <div class="info-group">
+          <div class="info-label">전체 레이아웃 분포</div>
+          <div id="layout-badges" style="margin-top:8px;"></div>
+        </div>
+        <button class="btn-main" style="margin:20px 0 0; width:100%;" onclick="downloadCurrent()">현재 슬라이드 저장</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ─── 기존 기능 코드 (로직 동일 유지) ──────────────────────────── */
+const THEMES = {
+  MODERN: { main:'#0064ff', sub:'#191f28', light:'#e8f3ff', text:'#191f28', bg:'#ffffff' },
+  DARK:   { main:'#ffffff', sub:'#0064ff', light:'#1c1c1c', text:'#ffffff', bg:'#111111' },
+  VIVID:  { main:'#ff5f2e', sub:'#191f28', light:'#fff0eb', text:'#191f28', bg:'#ffffff' }
+};
+
+let slides = [];
+let currentIdx = 0;
+let currentTheme = 'MODERN';
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2000);
+}
+
+function loadSample() {
+  document.getElementById('prompt-input').value =
+    "[슬라이드 1]\n제목: 2024년 토스 디자인 트렌드\n부제: 단순함의 미학\n레이아웃: COVER\n\n" +
+    "[슬라이드 2]\n제목: 핵심 가치 3가지\n키워드: 직관성, 연결성, 신뢰\n내용: - 사용자가 고민하지 않게 합니다\n- 모든 금융을 하나로 연결합니다\n- 보안을 최우선으로 합니다\n레이아웃: LIST";
+  showToast("샘플 데이터가 로드되었습니다.");
+}
+
+async function generateSlides() {
+  const text = document.getElementById('prompt-input').value.trim();
+  if(!text) return showToast("기획안을 입력해주세요.");
+ 
+  document.getElementById('loader').style.display = 'flex';
+  currentTheme = document.getElementById('theme-select').value;
+ 
+  // 가상 파싱 로직 (원본 기능 유지)
+  setTimeout(() => {
+    const blocks = text.split(/\[슬라이드 \d+\]/).filter(b => b.trim());
+    slides = blocks.map(block => {
+      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+      let slideObj = { title: 'Untitled', sub: '', bullets: [], keywords: [], layoutType: 'LIST' };
+      lines.forEach(l => {
+        if(l.startsWith('제목:')) slideObj.title = l.replace('제목:','').trim();
+        else if(l.startsWith('부제:')) slideObj.sub = l.replace('부제:','').trim();
+        else if(l.startsWith('키워드:')) slideObj.keywords = l.replace('키워드:','').split(',').map(k=>k.trim());
+        else if(l.startsWith('내용:')) slideObj.bullets.push(l.replace('내용:','').replace('-','').trim());
+        else if(l.startsWith('-')) slideObj.bullets.push(l.replace('-','').trim());
+        else if(l.startsWith('레이아웃:')) slideObj.layoutType = l.replace('레이아웃:','').trim();
+      });
+      return slideObj;
+    });
+
+    currentIdx = 0;
+    renderSlide();
+    updateLayoutBadges();
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('detail-panel').style.display = 'block';
+    showToast(`${slides.length}개의 슬라이드가 생성되었습니다.`);
+  }, 1500);
+}
+
+function renderSlide() {
+  if (slides.length === 0) return;
+  const canvas = document.getElementById('slide-canvas');
+  const ctx = canvas.getContext('2d');
+  const theme = THEMES[currentTheme];
+  const slide = slides[currentIdx];
+
+  // Draw Background
+  ctx.fillStyle = theme.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = theme.main;
+  if(slide.layoutType === 'COVER') {
+    ctx.fillRect(0, 0, 40, canvas.height);
+    ctx.font = "bold 60px Pretendard, sans-serif";
+    ctx.fillStyle = theme.sub;
+    ctx.fillText(slide.title, 100, 320);
+    ctx.font = "32px Pretendard, sans-serif";
+    ctx.fillStyle = "#8b95a1";
+    ctx.fillText(slide.sub, 100, 380);
+  } else {
+    ctx.font = "bold 44px Pretendard, sans-serif";
+    ctx.fillText(slide.title, 80, 100);
+    ctx.fillRect(80, 130, 60, 6);
+   
+    ctx.font = "28px Pretendard, sans-serif";
+    ctx.fillStyle = theme.sub;
+    slide.bullets.forEach((b, i) => {
+      ctx.fillText("• " + b, 100, 240 + (i * 60));
+    });
+  }
+
+  document.getElementById('cur-idx').textContent = currentIdx + 1;
+  document.getElementById('total-idx').textContent = slides.length;
+  updateDetail(currentIdx);
+}
+
+function updateDetail(i) {
+  const slide = slides[i];
+  document.getElementById('detail-layout').textContent = slide.layoutType;
+  document.getElementById('detail-keywords').textContent = slide.keywords.join(', ') || '없음';
+  document.getElementById('detail-bullets').textContent = slide.bullets.length + '개';
+}
+
+function updateLayoutBadges() {
+  const el = document.getElementById('layout-badges');
+  const types = ['COVER', 'LIST', 'TABLE', 'TIMELINE'];
+  el.innerHTML = types.map(t => {
+    const count = slides.filter(s => s.layoutType === t).length;
+    return count > 0 ? `<span class="layout-badge" style="background:var(--toss-blue); color:#fff;">${t} x ${count}</span>` : '';
+  }).join('');
+}
+
+function prevSlide() { if(currentIdx > 0) { currentIdx--; renderSlide(); } }
+function nextSlide() { if(currentIdx < slides.length - 1) { currentIdx++; renderSlide(); } }
+
+function downloadCurrent() {
+  const link = document.createElement('a');
+  link.download = `slide-${currentIdx+1}.png`;
+  link.href = document.getElementById('slide-canvas').toDataURL();
+  link.click();
+}
+
+function downloadAll() {
+  showToast("전체 다운로드 기능을 준비 중입니다.");
+}
+</script>
+</body>
+</html>
