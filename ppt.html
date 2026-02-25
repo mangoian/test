@@ -1,399 +1,865 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SlideForge AI — 토스 스타일 리뉴얼</title>
+<title>SlideForge AI — 기업용 PPT 슬라이드 생성기</title>
 <style>
-  /* ━━━ Toss Design System Style ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  :root {
-    --toss-blue: #0064ff;
-    --toss-blue-hover: #0051cf;
-    --toss-bg: #f2f4f6;
-    --toss-card: #ffffff;
-    --toss-text: #191f28;
-    --toss-grey-600: #4e5968;
-    --toss-grey-400: #8b95a1;
-    --toss-grey-200: #e5e8eb;
-    --radius-l: 24px;
-    --radius-m: 16px;
-    --radius-s: 12px;
-    --font-ui: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:#fff;color:#1a1a1a}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  button{cursor:pointer;font-family:inherit;border:none}
+  textarea,input,select{font-family:inherit;outline:none;box-sizing:border-box}
+  textarea{resize:none}
+
+  /* ── LAYOUT ── */
+  #app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+  #topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;height:50px;border-bottom:1px solid #ddd;
+    background:#fff;position:sticky;top:0;z-index:200;flex-shrink:0;
+  }
+  .topbar-left{display:flex;align-items:center;gap:10px}
+  .logo-box{
+    width:28px;height:28px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:14px;color:#fff;
+  }
+  .topbar-right{display:flex;align-items:center;gap:8px}
+  .live-dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
+
+  #tab-bar{display:flex;border-bottom:1px solid #ddd;background:#fff;flex-shrink:0}
+  .tab-btn{
+    flex:1;padding:10px;font-size:12px;font-weight:600;
+    background:transparent;border:none;border-bottom:2px solid transparent;
+    transition:all .2s;color:#888;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    height: 100vh;
-    font-family: var(--font-ui);
-    background-color: var(--toss-bg);
-    color: var(--toss-text);
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
+  #main{display:flex;flex:1;overflow:hidden;min-height:0}
+
+  /* LEFT */
+  #left-panel{
+    flex:1;min-width:0;border-right:1px solid #ddd;background:#fff;
+    display:flex;flex-direction:column;overflow-y:auto;
+  }
+  .left-inner{padding:20px 24px}
+
+  .section-label{font-size:11px;font-weight:700;margin-bottom:6px}
+  .char-count{font-size:9px;color:#bbb;font-family:monospace}
+  .label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+
+  #input-text{
+    width:100%;height:260px;padding:12px;
+    background:#fafafa;border:1px solid #ddd;border-radius:4px;
+    color:#1a1a1a;font-size:12px;line-height:1.6;transition:border-color .2s;
   }
 
-  button { cursor: pointer; font-family: inherit; border: none; transition: 0.2s; }
-  textarea, input, select { font-family: inherit; outline: none; border: none; }
-
-  /* ━━━ Layout ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  #app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    max-width: 1600px;
-    margin: 0 auto;
+  .divider{border-top:1px solid #eee;padding-top:16px;margin-bottom:14px}
+  .settings-title{font-size:12px;font-weight:700;margin-bottom:12px}
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .field-label{font-size:10px;color:#888;margin-bottom:4px}
+  .field-input{
+    width:100%;padding:8px 10px;background:#fafafa;
+    border:1px solid #ddd;border-radius:4px;color:#1a1a1a;
+    font-size:12px;transition:border-color .2s;
+  }
+  .field-select{
+    width:100%;padding:8px 10px;background:#fafafa;
+    border:1px solid #ddd;border-radius:4px;color:#1a1a1a;
+    font-size:12px;cursor:pointer;
   }
 
-  header {
-    height: 70px;
-    padding: 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--toss-grey-200);
-    z-index: 100;
-  }
-  .logo { font-size: 20px; font-weight: 800; color: var(--toss-text); display: flex; align-items: center; gap: 8px; }
-  .logo span { color: var(--toss-blue); }
-
-  main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 420px 1fr 340px;
-    gap: 20px;
-    padding: 24px;
-    overflow: hidden;
+  .color-row{display:flex;gap:8px;margin-top:6px}
+  .color-btn{
+    flex:1;padding:8px 6px;border-radius:4px;
+    font-size:11px;font-weight:700;transition:all .2s;border:1.5px solid #ddd;
   }
 
-  .panel {
-    background: var(--toss-card);
-    border-radius: var(--radius-l);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .legend-item{
+    display:flex;align-items:center;gap:8px;
+    padding:6px 9px;border-radius:4px;
+    background:#f8f8f8;border:1px solid #eee;
+  }
+  .legend-num{
+    width:18px;height:18px;border-radius:2px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:800;flex-shrink:0;
+  }
+  .legend-name{font-size:11px;font-weight:600;color:#222}
+  .legend-desc{font-size:9px;color:#999}
+
+  .btn-actions{padding:0 24px 24px;display:flex;flex-direction:column;gap:8px}
+  .btn-generate{
+    padding:13px;border-radius:4px;border:none;
+    font-size:14px;font-weight:700;letter-spacing:.02em;transition:all .2s;color:#fff;
+  }
+  .btn-download{
+    padding:11px;border-radius:4px;background:#fff;
+    font-size:13px;font-weight:700;transition:all .2s;border-width:1.5px;border-style:solid;
   }
 
-  /* ━━━ Left: Editor ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .editor-header { padding: 24px 24px 12px; }
-  .editor-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
- 
-  .input-area { flex: 1; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
-  textarea {
-    flex: 1;
-    background: #f9fafb;
-    border-radius: var(--radius-m);
-    padding: 20px;
-    font-size: 15px;
-    line-height: 1.6;
-    border: 1px solid transparent;
+  /* RIGHT */
+  #right-panel{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+  #right-header{
+    padding:12px 24px;border-bottom:1px solid #ddd;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;background:rgba(255,255,255,.93);
+    backdrop-filter:blur(8px);z-index:10;flex-shrink:0;
   }
-  textarea:focus { border-color: var(--toss-blue); background: #fff; }
+  .badge-row{display:flex;gap:5px;flex-wrap:wrap}
+  .layout-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600}
 
-  .config-row { display: flex; gap: 10px; padding: 20px 24px; }
-  .toss-select {
-    flex: 1;
-    background: var(--toss-bg);
-    padding: 12px 16px;
-    border-radius: var(--radius-s);
-    font-weight: 600;
-    font-size: 14px;
-  }
+  #slides-area{padding:20px 24px;flex:1}
+  .slides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
 
-  .btn-main {
-    background: var(--toss-blue);
-    color: #fff;
-    padding: 16px;
-    border-radius: var(--radius-m);
-    font-size: 16px;
-    font-weight: 700;
-    margin: 0 24px 24px;
+  /* Empty / Loading */
+  #empty-state{
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding-top:80px;text-align:center;
   }
-  .btn-main:hover { background: var(--toss-blue-hover); transform: translateY(-1px); }
+  #loading-state{
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding-top:60px;gap:18px;
+  }
+  .spinner{
+    width:44px;height:44px;border-radius:50%;
+    border:3px solid #eee;animation:spin .8s linear infinite;
+  }
+  .progress-list{width:260px}
+  .progress-row{margin-bottom:6px}
+  .progress-meta{display:flex;justify-content:space-between;margin-bottom:2px}
+  .progress-track{height:2px;background:#f0f0f0;border-radius:1px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:1px;transition:width .5s ease}
 
-  /* ━━━ Center: Preview ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .preview-panel { background: transparent; }
-  .canvas-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    background: #e5e8eb;
-    border-radius: var(--radius-l);
-    overflow: auto;
+  /* ── SLIDE CARDS ── */
+  .slide-card{
+    border-radius:6px;overflow:hidden;border:2px solid #ddd;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);transition:all .2s ease;
+    cursor:pointer;animation:slideIn .35s ease both;
   }
-  #slide-canvas {
-    background: white;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-    border-radius: 4px; /* 슬라이드 자체는 각진 형태 유지 */
-    min-width: 800px;
-    aspect-ratio: 16/9;
-  }
+  .slide-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.13)}
+  .slide-card.selected{}
 
-  .preview-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-    padding: 20px;
+  .card-footer{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:5px 10px;background:#f8f8f8;border-top:1px solid #eee;
   }
-  .nav-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: 700;
-  }
+  .footer-left{display:flex;align-items:center;gap:5px}
+  .type-badge{font-size:9px;padding:1px 6px;border-radius:2px;font-weight:700}
 
-  /* ━━━ Right: Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .detail-content { padding: 24px; }
-  .info-group { margin-bottom: 24px; }
-  .info-label { font-size: 13px; color: var(--toss-grey-400); font-weight: 600; margin-bottom: 6px; }
-  .info-value { font-size: 16px; font-weight: 700; }
- 
-  .layout-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    margin-right: 6px;
-    margin-bottom: 6px;
-  }
+  /* SLIDE CANVAS — 16:9 */
+  .slide-canvas{aspect-ratio:16/9;position:relative;overflow:hidden}
 
-  /* ━━━ Common ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(25, 31, 40, 0.9);
-    color: white;
-    padding: 14px 28px;
-    border-radius: 30px;
-    font-size: 15px;
-    font-weight: 500;
-    z-index: 1000;
-    display: none;
-  }
+  /* COVER */
+  .cover-topbar{position:absolute;top:0;left:0;right:0;height:8px}
+  .cover-botbar{position:absolute;bottom:0;left:0;right:0;height:4px}
+  .cover-corner{position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 60px 60px 0;border-color:transparent}
+  .cover-body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:8%;text-align:center;position:relative;z-index:1}
+  .cover-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 14px;border-radius:2px;letter-spacing:.1em;margin-bottom:14px;font-family:monospace;color:#fff}
+  .cover-title{font-size:clamp(14px,3.5vw,22px);font-weight:900;color:#1a1a1a;line-height:1.2;margin-bottom:10px;letter-spacing:-.02em}
+  .cover-subtitle{font-size:11px;color:#555;margin-bottom:14px}
+  .keyword-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+  .keyword-tag{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600}
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-overlay {
-    position: absolute; inset: 0; background: rgba(255,255,255,0.8);
-    display: none; align-items: center; justify-content: center; z-index: 50;
-  }
-  .spinner { width: 40px; height: 40px; border: 4px solid var(--toss-bg); border-top-color: var(--toss-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  /* LIST */
+  .list-canvas{background:#fff;border:1px solid #ddd;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;aspect-ratio:16/9}
+  .slide-header{display:flex;align-items:center;gap:8px;flex-shrink:0;padding:6px 14px}
+  .header-badge{font-size:9px;font-weight:800;padding:1px 7px;border-radius:2px;font-family:monospace}
+  .header-title{font-size:clamp(9px,2vw,13px);font-weight:700;color:#fff}
+  .list-body{flex:1;padding:6% 7%;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .bullet-row{display:flex;align-items:flex-start;gap:8px}
+  .bullet-dash{font-weight:900;font-size:11px;flex-shrink:0;line-height:1.4}
+  .bullet-text{font-size:9px;color:#222;line-height:1.5}
+  .slide-footer{border-top:1px solid #eee;padding:3px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+  .slide-year{font-size:8px;color:#999}
+  .slide-num{font-size:8px;font-family:monospace;font-weight:700}
 
+  /* TABLE */
+  .table-body{flex:1;padding:4% 5%;display:flex;flex-direction:column;justify-content:center}
+  .slide-table{width:100%;border-collapse:collapse;font-size:9px}
+  .slide-table th{padding:5px 8px;font-weight:700;text-align:center;font-size:9px;color:#fff}
+  .slide-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;color:#333;font-size:9px}
+
+  /* TIMELINE */
+  .timeline-body{flex:1;padding:5% 7%;display:flex;flex-direction:column;justify-content:center}
+  .timeline-row{display:flex;align-items:center;margin-bottom:10px}
+  .tl-step{flex:1;display:flex;align-items:center}
+  .tl-box{flex:1;text-align:center}
+  .tl-label{border-radius:3px;font-size:9px;font-weight:700;padding:6px 4px;margin-bottom:4px;color:#fff}
+  .tl-date{font-size:8px;font-weight:600;border-radius:2px;padding:2px 4px}
+  .tl-arrow{font-size:16px;margin:0 4px;flex-shrink:0;margin-bottom:20px}
+  .tl-note{background:#f9f9f9;border:1px solid #eee;border-radius:2px;padding:5px 8px;font-size:8px;color:#666}
+
+  /* Detail panel */
+  #detail-panel{
+    margin-top:14px;padding:12px 14px;border-radius:4px;
+    background:#fff;border:1px solid #ddd;animation:slideIn .2s ease;
+  }
+  .detail-title{font-size:10px;font-weight:700;margin-bottom:8px}
+  .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .detail-label{color:#888;margin-bottom:2px;font-size:9px}
+  .detail-value{color:#1a1a1a;font-size:10px}
+
+  /* TOAST */
+  #toast{
+    position:fixed;bottom:20px;right:20px;
+    padding:12px 18px;border-radius:6px;z-index:9999;
+    background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.12);
+    animation:toastIn .3s ease;
+    display:flex;align-items:center;gap:10px;max-width:300px;
+    display:none;
+  }
+  #toast.show{display:flex}
 </style>
 </head>
 <body>
-
 <div id="app">
-  <header>
-    <div class="logo">Slide<span>Forge</span> AI</div>
-    <div style="display:flex; gap:12px;">
-      <button class="toss-select" onclick="loadSample()" style="cursor:pointer">샘플 불러오기</button>
-      <button class="toss-select" onclick="downloadAll()" style="background:var(--toss-text); color:#fff; cursor:pointer">전체 다운로드</button>
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="topbar-left">
+      <div class="logo-box" id="logo-box">S</div>
+      <span style="font-weight:800;font-size:15px;letter-spacing:-.02em">SlideForge</span>
+      <span id="top-badge" style="font-size:9px;padding:2px 7px;border-radius:2px;font-weight:700">문서형</span>
     </div>
-  </header>
+    <div class="topbar-right">
+      <span id="slide-count-label" style="font-size:11px;color:#888;display:none"></span>
+      <div class="live-dot" id="live-dot"></div>
+      <span style="font-size:10px;color:#888;font-family:monospace">LIVE</span>
+    </div>
+  </div>
 
-  <main>
-    <section class="panel">
-      <div class="editor-header">
-        <h2>슬라이드 생성</h2>
-        <p style="color:var(--toss-grey-400); font-size:14px;">기획안 내용을 입력하면 AI가 슬라이드를 구성합니다.</p>
-      </div>
-      <div class="input-area">
-        <textarea id="prompt-input" placeholder="여기에 기획안이나 목차 내용을 입력하세요..."></textarea>
-      </div>
-      <div class="config-row">
-        <select id="theme-select" class="toss-select">
-          <option value="MODERN">모던 코발트</option>
-          <option value="DARK">다크 프리미엄</option>
-          <option value="VIVID">비비드 오렌지</option>
-        </select>
-        <select id="ratio-select" class="toss-select">
-          <option value="16:9">16:9 Wide</option>
-          <option value="4:3">4:3 Standard</option>
-        </select>
-      </div>
-      <button class="btn-main" id="generate-btn" onclick="generateSlides()">슬라이드 생성하기</button>
-     
-      <div class="loading-overlay" id="loader">
-        <div style="text-align:center">
-          <div class="spinner"></div>
-          <p style="margin-top:16px; font-weight:700; color:var(--toss-blue)">AI가 디자인하는 중...</p>
-        </div>
-      </div>
-    </section>
+  <!-- TAB BAR -->
+  <div id="tab-bar">
+    <button class="tab-btn" id="tab-input" onclick="switchTab('input')">📝 입력 &amp; 설정</button>
+    <button class="tab-btn" id="tab-preview" onclick="switchTab('preview')">🖼️ 슬라이드 프리뷰</button>
+  </div>
 
-    <section class="panel preview-panel">
-      <div class="canvas-container">
-        <canvas id="slide-canvas" width="1280" height="720"></canvas>
-      </div>
-      <div class="preview-controls">
-        <button class="nav-btn" onclick="prevSlide()">‹</button>
-        <div style="font-weight:700; font-size:16px;"><span id="cur-idx">0</span> / <span id="total-idx">0</span></div>
-        <button class="nav-btn" onclick="nextSlide()">›</button>
-      </div>
-    </section>
+  <!-- MAIN -->
+  <div id="main">
 
-    <section class="panel" id="detail-panel" style="display:none;">
-      <div class="detail-content">
-        <h3 id="detail-title" style="margin-bottom:24px; font-size:18px;">분석 정보</h3>
-        <div class="info-group">
-          <div class="info-label">레이아웃 타입</div>
-          <div class="info-value" id="detail-layout">—</div>
+    <!-- LEFT PANEL -->
+    <div id="left-panel">
+      <div class="left-inner">
+
+        <!-- Text input -->
+        <div style="margin-bottom:14px">
+          <div class="label-row">
+            <span class="section-label" id="input-label">원문 텍스트 입력</span>
+            <span class="char-count" id="char-count">0자</span>
+          </div>
+          <textarea id="input-text" placeholder="채용공고, 보고서, 기획안 등 텍스트를 입력하세요…"></textarea>
         </div>
-        <div class="info-group">
-          <div class="info-label">핵심 키워드</div>
-          <div class="info-value" id="detail-keywords">—</div>
+
+        <!-- Brand settings -->
+        <div class="divider">
+          <div class="settings-title" id="brand-title">브랜드 설정</div>
+          <div class="settings-grid">
+            <div>
+              <div class="field-label">회사명 / 문서 제목</div>
+              <input class="field-input" id="company-input" type="text" value="DB그룹"/>
+            </div>
+            <div>
+              <div class="field-label">슬라이드 수</div>
+              <select class="field-select" id="slide-count-select">
+                <option value="3">3장 (표지+본문+마무리)</option>
+                <option value="4">4장 (표지+본문+마무리)</option>
+                <option value="5" selected>5장 (표지+본문+마무리)</option>
+                <option value="6">6장 (표지+본문+마무리)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">강조 컬러</div>
+            <div class="color-row" id="color-row">
+              <button class="color-btn" data-key="green" onclick="setTheme('green')">🟢 그린</button>
+              <button class="color-btn" data-key="orange" onclick="setTheme('orange')">🟠 오렌지</button>
+              <button class="color-btn" data-key="blue" onclick="setTheme('blue')">🔵 블루</button>
+            </div>
+          </div>
         </div>
-        <div class="info-group">
-          <div class="info-label">불렛 포인트 수</div>
-          <div class="info-value" id="detail-bullets">0개</div>
+
+        <!-- Layout legend -->
+        <div style="border-top:1px solid #eee;padding-top:14px;margin-bottom:18px">
+          <div style="font-size:10px;color:#888;margin-bottom:8px">AI 자동 레이아웃 선택</div>
+          <div class="legend-grid" id="legend-grid">
+            <div class="legend-item">
+              <span class="legend-num" id="ln0">1</span>
+              <div><div class="legend-name">커버형</div><div class="legend-desc">표지·마무리 슬라이드</div></div>
+            </div>
+            <div class="legend-item">
+              <span class="legend-num" id="ln1">2</span>
+              <div><div class="legend-name">목록형</div><div class="legend-desc">항목·조건 나열</div></div>
+            </div>
+            <div class="legend-item">
+              <span class="legend-num" id="ln2">3</span>
+              <div><div class="legend-name">표 형식</div><div class="legend-desc">인원·분야·데이터</div></div>
+            </div>
+            <div class="legend-item">
+              <span class="legend-num" id="ln3">4</span>
+              <div><div class="legend-name">일정형</div><div class="legend-desc">프로세스·일정표</div></div>
+            </div>
+          </div>
         </div>
-        <div class="info-group">
-          <div class="info-label">전체 레이아웃 분포</div>
-          <div id="layout-badges" style="margin-top:8px;"></div>
-        </div>
-        <button class="btn-main" style="margin:20px 0 0; width:100%;" onclick="downloadCurrent()">현재 슬라이드 저장</button>
+
+      </div><!-- /left-inner -->
+
+      <!-- Action buttons -->
+      <div class="btn-actions">
+        <button class="btn-generate" id="btn-generate" onclick="generate()">◈  슬라이드 생성</button>
+        <button class="btn-download" id="btn-download" onclick="showToast()" style="display:none">↓  PPT 다운로드</button>
       </div>
-    </section>
-  </main>
+    </div><!-- /left-panel -->
+
+    <!-- RIGHT PANEL -->
+    <div id="right-panel">
+      <div id="right-header">
+        <span style="font-size:12px;font-weight:700;color:#1a1a1a">슬라이드 프리뷰</span>
+        <div class="badge-row" id="layout-badges"></div>
+      </div>
+
+      <div id="slides-area">
+        <!-- Empty state -->
+        <div id="empty-state">
+          <div style="font-size:48px;margin-bottom:16px;opacity:.2">📄</div>
+          <div style="font-size:14px;color:#888;margin-bottom:6px">슬라이드가 없습니다</div>
+          <div style="font-size:11px;color:#bbb;line-height:1.6">왼쪽에 텍스트를 입력하고<br>'슬라이드 생성' 버튼을 눌러주세요</div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="loading-state" style="display:none">
+          <div class="spinner" id="spinner"></div>
+          <div style="text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:4px">AI가 슬라이드를 구성하는 중</div>
+            <div style="font-size:11px;color:#888;font-family:monospace" id="loading-step-label">문단 분리 &amp; 파싱</div>
+          </div>
+          <div class="progress-list" id="progress-list"></div>
+        </div>
+
+        <!-- Slides grid -->
+        <div id="slides-grid" class="slides-grid" style="display:none"></div>
+
+        <!-- Detail panel -->
+        <div id="detail-panel" style="display:none">
+          <div class="detail-title" id="detail-title">▶ 슬라이드 1 분석 정보</div>
+          <div class="detail-grid">
+            <div><div class="detail-label">레이아웃</div><div class="detail-value" id="detail-layout">—</div></div>
+            <div><div class="detail-label">키워드</div><div class="detail-value" id="detail-keywords">—</div></div>
+            <div><div class="detail-label">항목 수</div><div class="detail-value" id="detail-bullets">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /right-panel -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast">
+  <span style="font-size:18px">✅</span>
+  <div>
+    <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:2px">PPT 파일 생성 완료! 다운로드가 시작됩니다.</div>
+    <div style="font-size:10px;color:#888" id="toast-time">SlideForge · 00:00:00</div>
+  </div>
 </div>
 
-<div id="toast" class="toast"></div>
-
 <script>
-/* ─── 기존 기능 코드 (로직 동일 유지) ──────────────────────────── */
+/* ─── THEMES ──────────────────────────────────── */
 const THEMES = {
-  MODERN: { main:'#0064ff', sub:'#191f28', light:'#e8f3ff', text:'#191f28', bg:'#ffffff' },
-  DARK:   { main:'#ffffff', sub:'#0064ff', light:'#1c1c1c', text:'#ffffff', bg:'#111111' },
-  VIVID:  { main:'#ff5f2e', sub:'#191f28', light:'#fff0eb', text:'#191f28', bg:'#ffffff' }
+  green:  { main:'#2E7D32', light:'#E8F5E9', mid:'#4CAF50' },
+  orange: { main:'#E65100', light:'#FFF3E0', mid:'#FF9800' },
+  blue:   { main:'#1565C0', light:'#E3F2FD', mid:'#2196F3' },
 };
-
+let currentTheme = 'green';
 let slides = [];
-let currentIdx = 0;
-let currentTheme = 'MODERN';
+let selectedIdx = null;
+let isLoading = false;
+let isDone = false;
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 2000);
+const LOADING_STEPS = ['문단 분리 & 파싱','섹션 구조 분석','레이아웃 배치 결정','테마 스타일 적용','슬라이드 렌더링'];
+const SAMPLE = `[모집요강]
+
+1. 모집 분야 / 인원
+본점 및 해외지원업무 0명 서울 근무
+지원 가능 국적: 중국·베트남·미얀마·인도·인도네시아·필리핀·태국·캄보디아 국적자
+
+2. 지원 자격
+중국·베트남·미얀마·인도·인도네시아·필리핀·태국·캄보디아 국적자
+학력: 4년제 정규대학(대학원) 재학생 또는 졸업자(전공 무관)
+학점: 전체성적 평균 B0학점 이상(4.5점 만점 환산시 3.0점 이상)
+
+3. 전형 방법 / 일정
+서류접수: 5.31(금)~6.9(일), 6.11발표
+면접: 6.13(목)~6.14(금), 6.18발표
+OJT: 7.1(월)~7.31(수) 1개월
+
+4. 지원 기간 / 방법
+지원 기간: 2019. 5.31(금) 18시~6.9(일) 18시까지
+지원 방법: DB그룹 채용 홈페이지를 통해 인터넷 접수
+서류전형 합격자 발표: 6.11(화) 오후 6시 개별 연락
+제출서류 반환청구 및 파기: 각종 증빙서류는 면접시 제출하며, 제출서류는 최종결과 발표일로부터 14일 이내에 반환청구가 가능합니다.
+
+5. 기 타
+근무 조건: 180만원 / 1개월(일 8시간, 주 5일 근무)
+근무지: 서울 강남구 테헤란로 432 DB 금융센터
+우수인턴의 경우 학업장려금 지원`;
+
+/* ─── INIT ──────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('input-text').value = SAMPLE;
+  updateCharCount();
+  applyTheme('green');
+  switchTab('input');
+  buildProgressList();
+
+  document.getElementById('input-text').addEventListener('input', updateCharCount);
+  document.getElementById('company-input').addEventListener('focus', e => e.target.style.borderColor = THEMES[currentTheme].main);
+  document.getElementById('company-input').addEventListener('blur', e => e.target.style.borderColor = '#ddd');
+  document.getElementById('input-text').addEventListener('focus', e => e.target.style.borderColor = THEMES[currentTheme].main);
+  document.getElementById('input-text').addEventListener('blur', e => e.target.style.borderColor = '#ddd');
+});
+
+function updateCharCount() {
+  const v = document.getElementById('input-text').value;
+  document.getElementById('char-count').textContent = v.length.toLocaleString() + '자';
 }
 
-function loadSample() {
-  document.getElementById('prompt-input').value =
-    "[슬라이드 1]\n제목: 2024년 토스 디자인 트렌드\n부제: 단순함의 미학\n레이아웃: COVER\n\n" +
-    "[슬라이드 2]\n제목: 핵심 가치 3가지\n키워드: 직관성, 연결성, 신뢰\n내용: - 사용자가 고민하지 않게 합니다\n- 모든 금융을 하나로 연결합니다\n- 보안을 최우선으로 합니다\n레이아웃: LIST";
-  showToast("샘플 데이터가 로드되었습니다.");
-}
+/* ─── THEME ──────────────────────────────────── */
+function applyTheme(key) {
+  currentTheme = key;
+  const T = THEMES[key];
 
-async function generateSlides() {
-  const text = document.getElementById('prompt-input').value.trim();
-  if(!text) return showToast("기획안을 입력해주세요.");
- 
-  document.getElementById('loader').style.display = 'flex';
-  currentTheme = document.getElementById('theme-select').value;
- 
-  // 가상 파싱 로직 (원본 기능 유지)
-  setTimeout(() => {
-    const blocks = text.split(/\[슬라이드 \d+\]/).filter(b => b.trim());
-    slides = blocks.map(block => {
-      const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-      let slideObj = { title: 'Untitled', sub: '', bullets: [], keywords: [], layoutType: 'LIST' };
-      lines.forEach(l => {
-        if(l.startsWith('제목:')) slideObj.title = l.replace('제목:','').trim();
-        else if(l.startsWith('부제:')) slideObj.sub = l.replace('부제:','').trim();
-        else if(l.startsWith('키워드:')) slideObj.keywords = l.replace('키워드:','').split(',').map(k=>k.trim());
-        else if(l.startsWith('내용:')) slideObj.bullets.push(l.replace('내용:','').replace('-','').trim());
-        else if(l.startsWith('-')) slideObj.bullets.push(l.replace('-','').trim());
-        else if(l.startsWith('레이아웃:')) slideObj.layoutType = l.replace('레이아웃:','').trim();
-      });
-      return slideObj;
-    });
+  // logo
+  document.getElementById('logo-box').style.background = T.main;
+  document.getElementById('top-badge').style.background = T.light;
+  document.getElementById('top-badge').style.color = T.main;
+  document.getElementById('live-dot').style.background = T.main;
 
-    currentIdx = 0;
-    renderSlide();
-    updateLayoutBadges();
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('detail-panel').style.display = 'block';
-    showToast(`${slides.length}개의 슬라이드가 생성되었습니다.`);
-  }, 1500);
-}
+  // section labels
+  document.getElementById('input-label').style.color = T.main;
+  document.getElementById('brand-title').style.color = T.main;
 
-function renderSlide() {
-  if (slides.length === 0) return;
-  const canvas = document.getElementById('slide-canvas');
-  const ctx = canvas.getContext('2d');
-  const theme = THEMES[currentTheme];
-  const slide = slides[currentIdx];
+  // color buttons
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    const k = btn.dataset.key;
+    const Tv = THEMES[k];
+    if (k === key) {
+      btn.style.border = '1.5px solid ' + Tv.main;
+      btn.style.background = Tv.light;
+      btn.style.color = Tv.main;
+    } else {
+      btn.style.border = '1.5px solid #ddd';
+      btn.style.background = '#fafafa';
+      btn.style.color = '#888';
+    }
+  });
 
-  // Draw Background
-  ctx.fillStyle = theme.bg;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = theme.main;
-  if(slide.layoutType === 'COVER') {
-    ctx.fillRect(0, 0, 40, canvas.height);
-    ctx.font = "bold 60px Pretendard, sans-serif";
-    ctx.fillStyle = theme.sub;
-    ctx.fillText(slide.title, 100, 320);
-    ctx.font = "32px Pretendard, sans-serif";
-    ctx.fillStyle = "#8b95a1";
-    ctx.fillText(slide.sub, 100, 380);
-  } else {
-    ctx.font = "bold 44px Pretendard, sans-serif";
-    ctx.fillText(slide.title, 80, 100);
-    ctx.fillRect(80, 130, 60, 6);
-   
-    ctx.font = "28px Pretendard, sans-serif";
-    ctx.fillStyle = theme.sub;
-    slide.bullets.forEach((b, i) => {
-      ctx.fillText("• " + b, 100, 240 + (i * 60));
-    });
+  // legend nums
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('ln' + i);
+    if (el) { el.style.background = T.light; el.style.color = T.main; }
   }
 
-  document.getElementById('cur-idx').textContent = currentIdx + 1;
-  document.getElementById('total-idx').textContent = slides.length;
-  updateDetail(currentIdx);
+  // generate button
+  const btn = document.getElementById('btn-generate');
+  if (!isLoading) {
+    btn.style.background = T.main;
+    btn.style.color = '#fff';
+  }
+
+  // download button
+  const dl = document.getElementById('btn-download');
+  dl.style.borderColor = T.main;
+  dl.style.color = T.main;
+
+  // toast border
+  document.getElementById('toast').style.borderColor = T.main;
+
+  // re-render if slides exist
+  if (slides.length > 0) renderSlides();
 }
 
-function updateDetail(i) {
+function setTheme(key) { applyTheme(key); }
+
+/* ─── TAB ────────────────────────────────────── */
+function switchTab(tab) {
+  const T = THEMES[currentTheme];
+  document.getElementById('left-panel').style.display = tab === 'preview' ? 'none' : 'flex';
+  document.getElementById('right-panel').style.display = tab === 'input' ? 'none' : 'flex';
+
+  document.getElementById('tab-input').style.color = tab === 'input' ? T.main : '#888';
+  document.getElementById('tab-input').style.borderBottomColor = tab === 'input' ? T.main : 'transparent';
+  document.getElementById('tab-preview').style.color = tab === 'preview' ? T.main : '#888';
+  document.getElementById('tab-preview').style.borderBottomColor = tab === 'preview' ? T.main : 'transparent';
+}
+
+/* ─── TEXT ANALYSIS ──────────────────────────── */
+function analyzeText(rawText, companyName, slideCount) {
+  const stopSet = new Set(['이','그','저','을','를','가','은','는','에','의','와','과','하','있','위','및','등','에서','로','으로','들','한']);
+  const getKeywords = t => {
+    const words = (t.match(/[가-힣]{2,6}/g)||[]).filter(w=>!stopSet.has(w));
+    const freq = {};
+    words.forEach(w=>(freq[w]=(freq[w]||0)+1));
+    return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([w])=>w);
+  };
+  const extractBullets = t =>
+    t.split(/\n/).map(s=>s.replace(/^[-·•]\s*/,'').trim()).filter(s=>s.length>5).slice(0,5);
+  const extractSummary = t =>
+    t.split(/[.!?\n]/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4);
+
+  const paragraphs = rawText.split(/\n{2,}/).map(p=>p.trim()).filter(p=>p.length>15);
+  const assignType = (text, idx) => {
+    if (idx===0) return 'COVER';
+    if (/일정|기간|~|발표|접수|면접/.test(text)) return 'TIMELINE';
+    if (/\d+명|\d+만원|인원|분야|직무|근무지/.test(text)) return 'TABLE';
+    return 'LIST';
+  };
+
+  const result = [];
+  result.push({
+    id:0, layoutType:'COVER', badge:'모집요강', isCover:true, isClosing:false,
+    title: companyName||'기업 채용 안내',
+    subtitle: (paragraphs[0]||'').slice(0,50) + (paragraphs[0]&&paragraphs[0].length>50?'…':''),
+    bullets:[], table:null, timeline:null,
+    keywords: getKeywords(rawText).slice(0,4),
+  });
+
+  paragraphs.slice(0, Math.min(slideCount-2, 5)).forEach((para, i) => {
+    const type = assignType(para, i+1);
+    const lines = para.split(/\n/).filter(l=>l.trim().length>2);
+    const rawTitle = lines[0]||'';
+    const titleLine = rawTitle.replace(/^\d+\.\s*/,'').slice(0,30) + (rawTitle.replace(/^\d+\.\s*/,'').length>30?'…':'');
+
+    let tableData = null;
+    if (type==='TABLE') {
+      const rows = lines.slice(1).map(l=>l.split(/\s{2,}|[:\t]/).map(c=>c.trim()).filter(Boolean));
+      if (rows.length>0) tableData = { rows: rows.slice(0,4) };
+    }
+    let timelineData = null;
+    if (type==='TIMELINE') {
+      const steps = [];
+      lines.forEach(l => {
+        const m = l.match(/([가-힣]+)[\s:：]*([\d.~(월화수목금토일)]+)/);
+        if(m) steps.push({ label:m[1], date:m[2] });
+      });
+      if (steps.length>=2) timelineData = steps.slice(0,4);
+    }
+
+    result.push({
+      id:i+1, layoutType:type, isCover:false, isClosing:false,
+      badge:['SECTION','DATA','INFO','DETAIL','NOTE'][i]||'SECTION',
+      title: titleLine,
+      bullets: type==='LIST' ? extractBullets(lines.slice(1).join('\n')) : extractSummary(para).slice(0,4),
+      table: tableData,
+      timeline: timelineData,
+      keywords: getKeywords(para).slice(0,2),
+    });
+  });
+
+  result.push({
+    id:result.length, layoutType:'COVER', badge:'마무리', isCover:false, isClosing:true,
+    title:'감사합니다',
+    subtitle: companyName||'채용 문의는 홈페이지를 이용해 주세요',
+    bullets:[], table:null, timeline:null, keywords:[],
+  });
+
+  return result;
+}
+
+/* ─── PROGRESS BAR ───────────────────────────── */
+function buildProgressList() {
+  const el = document.getElementById('progress-list');
+  el.innerHTML = LOADING_STEPS.map((s,i) => `
+    <div class="progress-row">
+      <div class="progress-meta">
+        <span style="font-size:9px;color:#ccc" id="ps-label-${i}">${s}</span>
+        <span style="font-size:9px;color:#ccc;font-family:monospace" id="ps-pct-${i}">—</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="ps-fill-${i}" style="width:0%;background:${THEMES[currentTheme].main}"></div>
+      </div>
+    </div>`).join('');
+}
+
+function updateProgress(step) {
+  const T = THEMES[currentTheme];
+  LOADING_STEPS.forEach((s,i) => {
+    const lbl = document.getElementById('ps-label-'+i);
+    const pct = document.getElementById('ps-pct-'+i);
+    const fill = document.getElementById('ps-fill-'+i);
+    if (!lbl) return;
+    if (i < step) {
+      lbl.style.color = T.main; pct.textContent = '100%';
+      fill.style.width = '100%'; fill.style.background = T.main;
+    } else if (i === step) {
+      lbl.style.color = T.main; pct.textContent = '…';
+      fill.style.width = '55%'; fill.style.background = T.main;
+    } else {
+      lbl.style.color = '#ccc'; pct.textContent = '—';
+      fill.style.width = '0%';
+    }
+  });
+  document.getElementById('loading-step-label').textContent = LOADING_STEPS[step];
+  document.getElementById('spinner').style.borderTopColor = T.main;
+}
+
+/* ─── GENERATE ───────────────────────────────── */
+async function generate() {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text || isLoading) return;
+  const company = document.getElementById('company-input').value;
+  const slideCount = parseInt(document.getElementById('slide-count-select').value);
+  const T = THEMES[currentTheme];
+
+  isLoading = true; isDone = false; slides = []; selectedIdx = null;
+  document.getElementById('btn-generate').textContent = '◌  분석 중…';
+  document.getElementById('btn-generate').style.background = '#f0f0f0';
+  document.getElementById('btn-generate').style.color = '#bbb';
+  document.getElementById('btn-download').style.display = 'none';
+  document.getElementById('slide-count-label').style.display = 'none';
+
+  // show loading
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('loading-state').style.display = 'flex';
+  document.getElementById('slides-grid').style.display = 'none';
+  document.getElementById('detail-panel').style.display = 'none';
+  document.getElementById('layout-badges').innerHTML = '';
+  switchTab('preview');
+  buildProgressList();
+
+  for (let i = 0; i < LOADING_STEPS.length; i++) {
+    updateProgress(i);
+    await sleep(380 + Math.random()*200);
+  }
+
+  slides = analyzeText(text, company, slideCount);
+  isLoading = false; isDone = true;
+
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('slides-grid').style.display = 'grid';
+  document.getElementById('btn-generate').textContent = '◈  슬라이드 생성';
+  document.getElementById('btn-generate').style.background = T.main;
+  document.getElementById('btn-generate').style.color = '#fff';
+  document.getElementById('btn-download').style.display = 'block';
+  document.getElementById('slide-count-label').textContent = slides.length + '장 생성됨';
+  document.getElementById('slide-count-label').style.display = 'inline';
+
+  renderSlides();
+  selectSlide(0);
+  updateLayoutBadges();
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ─── RENDER SLIDES ──────────────────────────── */
+function renderSlides() {
+  const grid = document.getElementById('slides-grid');
+  grid.innerHTML = '';
+  slides.forEach((slide, i) => {
+    const card = createSlideCard(slide, i);
+    card.style.animationDelay = (i * 0.07) + 's';
+    card.addEventListener('click', () => selectSlide(i));
+    grid.appendChild(card);
+  });
+}
+
+function createSlideCard(slide, index) {
+  const T = THEMES[currentTheme];
+  const typeLabel = {COVER:'커버형',LIST:'목록형',TABLE:'표 형식',TIMELINE:'일정형'}[slide.layoutType]||'목록형';
+
+  const card = document.createElement('div');
+  card.className = 'slide-card';
+  card.id = 'card-' + index;
+
+  let canvasHTML = '';
+  if (slide.layoutType === 'COVER') canvasHTML = renderCoverHTML(slide, T);
+  else if (slide.layoutType === 'LIST') canvasHTML = renderListHTML(slide, T, index);
+  else if (slide.layoutType === 'TABLE') canvasHTML = renderTableHTML(slide, T, index);
+  else canvasHTML = renderTimelineHTML(slide, T, index);
+
+  card.innerHTML = `
+    ${canvasHTML}
+    <div class="card-footer">
+      <div class="footer-left">
+        <span class="type-badge" style="background:${T.light};color:${T.main}">${typeLabel}</span>
+        <span style="font-size:9px;color:#888">${slide.title.slice(0,20)}${slide.title.length>20?'…':''}</span>
+      </div>
+      <span style="font-size:9px;color:#bbb;font-family:monospace">#${String(index+1).padStart(2,'0')}</span>
+    </div>`;
+  return card;
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderCoverHTML(slide, T) {
+  const company = document.getElementById('company-input').value;
+  const kwHTML = slide.keywords.map(k=>
+    `<span class="keyword-tag" style="background:${T.light};color:${T.main}">#${esc(k)}</span>`
+  ).join('');
+  return `
+    <div class="slide-canvas" style="background:radial-gradient(ellipse at 30% 50%,${lighten(T.main)} 0%,#fff 70%)">
+      <div class="cover-topbar" style="background:${T.main}"></div>
+      <div class="cover-botbar" style="background:${T.light}"></div>
+      <div class="cover-corner" style="border-color:transparent ${T.light} transparent transparent"></div>
+      <div class="cover-body">
+        ${slide.isCover && company ? `<div style="font-size:9px;color:#888;letter-spacing:.3em;margin-bottom:12px;font-family:monospace">${esc(company.toUpperCase())}</div>` : ''}
+        <div class="cover-badge" style="background:${T.main}">${esc(slide.badge)}</div>
+        <div class="cover-title">${esc(slide.title)}</div>
+        ${slide.subtitle ? `<div class="cover-subtitle">${esc(slide.subtitle)}</div>` : ''}
+        ${slide.keywords.length ? `<div class="keyword-row">${kwHTML}</div>` : ''}
+        ${slide.isClosing ? `<div style="font-size:8px;color:#ccc;letter-spacing:.2em;font-family:monospace;margin-top:12px">CONFIDENTIAL · ${new Date().getFullYear()}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderListHTML(slide, T, idx) {
+  const bulletsHTML = slide.bullets.length === 0
+    ? [82,74,66].map(w=>`<div style="height:9px;background:#f0f0f0;border-radius:3px;width:${w}%;margin-bottom:4px"></div>`).join('')
+    : slide.bullets.map(b=>`
+        <div class="bullet-row">
+          <span class="bullet-dash" style="color:${T.main}">-</span>
+          <span class="bullet-text">${esc(b)}</span>
+        </div>`).join('');
+  return `
+    <div class="list-canvas">
+      <div class="slide-header" style="background:${T.main}">
+        <span class="header-badge" style="background:#fff;color:${T.main}">${esc(slide.badge)}</span>
+        <span class="header-title">${esc(slide.title)}</span>
+      </div>
+      <div class="list-body">${bulletsHTML}</div>
+      <div class="slide-footer">
+        <span class="slide-year">${new Date().getFullYear()}</span>
+        <span class="slide-num" style="color:${T.main}">${String(idx+1).padStart(2,'0')}</span>
+      </div>
+    </div>`;
+}
+
+function renderTableHTML(slide, T, idx) {
+  const headers = ['모집 분야 (직무)','인원','근무지','비 고'];
+  const rows = slide.table?.rows || [['본점 및 해외지원업무','0명','서울','—']];
+  const thHTML = headers.map(h=>`<th style="background:${T.mid};border:1px solid ${T.main}">${esc(h)}</th>`).join('');
+  const trHTML = rows.map((row,ri)=>`<tr>${headers.map((_,ci)=>`<td style="background:${ri%2===0?'#fff':T.light}">${esc(row[ci]||'—')}</td>`).join('')}</tr>`).join('');
+  const bHTML = slide.bullets.slice(0,2).map(b=>`
+    <div class="bullet-row" style="margin-top:6px">
+      <span class="bullet-dash" style="color:${T.main};font-size:10px">-</span>
+      <span style="font-size:8px;color:#444">${esc(b)}</span>
+    </div>`).join('');
+  return `
+    <div class="list-canvas">
+      <div class="slide-header" style="background:${T.main}">
+        <span class="header-badge" style="background:#fff;color:${T.main}">${esc(slide.badge)}</span>
+        <span class="header-title">${esc(slide.title)}</span>
+      </div>
+      <div class="table-body">
+        <table class="slide-table"><thead><tr>${thHTML}</tr></thead><tbody>${trHTML}</tbody></table>
+        ${bHTML}
+      </div>
+      <div class="slide-footer">
+        <span class="slide-year">${new Date().getFullYear()}</span>
+        <span class="slide-num" style="color:${T.main}">${String(idx+1).padStart(2,'0')}</span>
+      </div>
+    </div>`;
+}
+
+function renderTimelineHTML(slide, T, idx) {
+  const steps = slide.timeline || [
+    {label:'서류접수',date:'5.31~6.9'},
+    {label:'면접',date:'6.13~6.14'},
+    {label:'OJT',date:'7.1~7.31'},
+  ];
+  const stepsHTML = steps.map((s,i)=>`
+    <div class="tl-step">
+      <div class="tl-box">
+        <div class="tl-label" style="background:${T.main}">${esc(s.label)}</div>
+        <div class="tl-date" style="color:${T.main};background:${T.light}">${esc(s.date)}</div>
+      </div>
+      ${i < steps.length-1 ? `<div class="tl-arrow" style="color:${T.mid}">➜</div>` : ''}
+    </div>`).join('');
+  const bHTML = slide.bullets.slice(0,2).map(b=>`
+    <div class="bullet-row" style="margin-top:5px">
+      <span class="bullet-dash" style="color:${T.main};font-size:10px">-</span>
+      <span style="font-size:8px;color:#444">${esc(b)}</span>
+    </div>`).join('');
+  return `
+    <div class="list-canvas">
+      <div class="slide-header" style="background:${T.main}">
+        <span class="header-badge" style="background:#fff;color:${T.main}">${esc(slide.badge)}</span>
+        <span class="header-title">${esc(slide.title)}</span>
+      </div>
+      <div class="timeline-body">
+        <div class="timeline-row">${stepsHTML}</div>
+        <div class="tl-note" style="border-left:3px solid ${T.main}">
+          ※ 상기 전형 일정은 회사 사정에 따라 변경될 수 있으며, 세부 일정은 각 합격자에게 별도 공지됩니다.
+        </div>
+        ${bHTML}
+      </div>
+      <div class="slide-footer">
+        <span class="slide-year">${new Date().getFullYear()}</span>
+        <span class="slide-num" style="color:${T.main}">${String(idx+1).padStart(2,'0')}</span>
+      </div>
+    </div>`;
+}
+
+function lighten(hex) {
+  // make a very light tint of the color
+  return hex + '18';
+}
+
+/* ─── SELECT SLIDE ───────────────────────────── */
+function selectSlide(i) {
+  const T = THEMES[currentTheme];
+  // deselect previous
+  if (selectedIdx !== null) {
+    const prev = document.getElementById('card-' + selectedIdx);
+    if (prev) { prev.style.borderColor = '#ddd'; prev.style.boxShadow = '0 2px 10px rgba(0,0,0,.08)'; }
+  }
+  selectedIdx = i;
+  const cur = document.getElementById('card-' + i);
+  if (cur) {
+    cur.style.borderColor = T.main;
+    cur.style.boxShadow = `0 0 0 1px ${T.main}40, 0 4px 16px ${T.main}20`;
+  }
+  // show detail
   const slide = slides[i];
-  document.getElementById('detail-layout').textContent = slide.layoutType;
-  document.getElementById('detail-keywords').textContent = slide.keywords.join(', ') || '없음';
+  if (!slide) return;
+  document.getElementById('detail-panel').style.display = 'block';
+  document.getElementById('detail-title').textContent = `▶ 슬라이드 ${i+1} 분석 정보`;
+  document.getElementById('detail-title').style.color = T.main;
+  const layoutMap = {COVER:'커버형',LIST:'목록형',TABLE:'표 형식',TIMELINE:'일정형'};
+  document.getElementById('detail-layout').textContent = layoutMap[slide.layoutType]||'목록형';
+  document.getElementById('detail-keywords').textContent = slide.keywords.join(' · ')||'—';
   document.getElementById('detail-bullets').textContent = slide.bullets.length + '개';
 }
 
+/* ─── LAYOUT BADGES ──────────────────────────── */
 function updateLayoutBadges() {
+  const T = THEMES[currentTheme];
   const el = document.getElementById('layout-badges');
-  const types = ['COVER', 'LIST', 'TABLE', 'TIMELINE'];
-  el.innerHTML = types.map(t => {
-    const count = slides.filter(s => s.layoutType === t).length;
-    return count > 0 ? `<span class="layout-badge" style="background:var(--toss-blue); color:#fff;">${t} x ${count}</span>` : '';
+  const map = {커버형:'COVER',목록형:'LIST','표 형식':'TABLE',일정형:'TIMELINE'};
+  el.innerHTML = Object.entries(map).map(([name, type]) => {
+    const cnt = slides.filter(s=>s.layoutType===type).length;
+    return cnt > 0 ? `<span class="layout-badge" style="background:${T.light};color:${T.main}">${name}×${cnt}</span>` : '';
   }).join('');
 }
 
-function prevSlide() { if(currentIdx > 0) { currentIdx--; renderSlide(); } }
-function nextSlide() { if(currentIdx < slides.length - 1) { currentIdx++; renderSlide(); } }
-
-function downloadCurrent() {
-  const link = document.createElement('a');
-  link.download = `slide-${currentIdx+1}.png`;
-  link.href = document.getElementById('slide-canvas').toDataURL();
-  link.click();
-}
-
-function downloadAll() {
-  showToast("전체 다운로드 기능을 준비 중입니다.");
+/* ─── TOAST ──────────────────────────────────── */
+function showToast() {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-time').textContent = 'SlideForge · ' + new Date().toLocaleTimeString('ko-KR');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
 }
 </script>
 </body>
