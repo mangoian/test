@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>탭 UI</title>
+<style type="text/css">
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", Dotum, "돋움", Arial, sans-serif;
+    font-size: 13px;
+    background-color: #f0f0f0;
+  }
+  .wrap {
+    width: 300px;
+    margin: 40px auto;
+  }
+  /* 탭 버튼 영역 */
+  .tab-list {
+    list-style: none;
+    zoom: 1; /* IE hasLayout */
+  }
+  .tab-list:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .tab-list li {
+    float: left;
+    margin-right: 4px;
+  }
+  .tab-list li a {
+    display: block;
+    padding: 7px 10px;
+    background-color: #cccccc;
+    color: #555555;
+    text-decoration: none;
+    border: 1px solid #aaaaaa;
+    border-bottom: none;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    /* IE6/7 inline-block 대체 */
+    zoom: 1;
+  }
+  .tab-list li a:hover {
+    background-color: #dddddd;
+    color: #222222;
+  }
+  .tab-list li.active a {
+    background-color: #ffffff;
+    color: #1a5fb0;
+    border-color: #aaaaaa;
+    position: relative;
+    top: 1px; /* 콘텐츠 박스와 이어지게 */
+  }
+  /* 콘텐츠 박스 */
+  .tab-body {
+    border: 1px solid #aaaaaa;
+    background-color: #ffffff;
+    padding: 24px;
+    zoom: 1;
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tab-panel.active {
+    display: block;
+  }
+  .tab-panel h2 {
+    font-size: 15px;
+    color: #1a5fb0;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #1a5fb0;
+    padding-bottom: 6px;
+  }
+  .tab-panel p {
+    line-height: 1.8;
+    color: #333333;
+  }
+  .tab-panel ul {
+    margin: 10px 0 0 20px;
+    line-height: 2;
+    color: #444444;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <ul class="tab-list" id="tabList">
+    <li class="active" id="tab0"><a href="#" onclick="showTab(0); return false;">탭 1 - 소개</a></li>
+    <li id="tab1"><a href="#" onclick="showTab(1); return false;">탭 2 - 기능</a></li>
+    <li id="tab2"><a href="#" onclick="showTab(2); return false;">탭 3 - 문의</a></li>
+  </ul>
+
+  <div class="tab-body">
+
+    <div class="tab-panel active" id="panel0">
+      <h2>소개</h2>
+      <p>안녕하세요! 이 페이지는 인터넷 익스플로러(IE)와 호환되도록 제작된 탭 UI입니다.</p>
+      <p>오래된 시스템에서도 레이아웃이 깨지지 않도록 XHTML 1.0 및 CSS2 기준으로 작성되었습니다.</p>
+    </div>
+
+    <div class="tab-panel" id="panel1">
+      <h2>주요 기능</h2>
+      <p>이 탭 UI의 주요 특징입니다:</p>
+      <ul>
+        <li>IE6 / IE7 / IE8 이상 호환</li>
+        <li>JavaScript 최소화 (onclick 이벤트만 사용)</li>
+        <li>float 기반 레이아웃 (flex, grid 미사용)</li>
+        <li>zoom:1 hasLayout 처리 적용</li>
+      </ul>
+    </div>
+
+    <div class="tab-panel" id="panel2">
+      <h2>문의</h2>
+      <p>추가 문의사항이 있으시면 아래로 연락 주세요.</p>
+      <ul>
+        <li>이메일: example@company.com</li>
+        <li>전화: 02-0000-0000</li>
+        <li>운영시간: 평일 09:00 ~ 18:00</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script type="text/javascript">
+  // IE6 호환: 패널 ID를 배열로 직접 관리
+  var tabIds   = ["tab0", "tab1", "tab2"];
+  var panelIds = ["panel0", "panel1", "panel2"];
+
+  function showTab(index) {
+    var i;
+    // 모든 탭 비활성화
+    for (i = 0; i < tabIds.length; i++) {
+      document.getElementById(tabIds[i]).className = "";
+    }
+    // 모든 패널 비활성화
+    for (i = 0; i < panelIds.length; i++) {
+      document.getElementById(panelIds[i]).className = "tab-panel";
+    }
+    // 선택된 탭/패널 활성화
+    document.getElementById(tabIds[index]).className = "active";
+    document.getElementById(panelIds[index]).className = "tab-panel active";
+  }
+</script>
+
+</body>
+</html>
